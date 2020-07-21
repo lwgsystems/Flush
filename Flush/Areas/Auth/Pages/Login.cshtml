@@ -1,0 +1,42 @@
+﻿@page
+@model Flush.Areas.Auth.Pages.LoginModel
+@{
+}
+
+@{
+    ViewData["Title"] = "Authorisation";
+}
+
+<form id="account" method="post">
+    <h4>Welcome to ScrumPokerClub</h4>
+    <hr />
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="form-group">
+        <label asp-for="InputRoom"></label>
+        <input asp-for="InputRoom" class="form-control" />
+        <span asp-validation-for="InputRoom" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="InputName"></label>
+        <input asp-for="InputName" class="form-control" />
+        <span asp-validation-for="InputName" class="text-danger"></span>
+    </div>
+    <div class="form-group d-flex justify-content-center">
+        <button type="submit" class="btn btn-primary">Join in!</button>
+    </div>
+    <hr />
+    <div class="form-group m-0">
+        <div class="text-muted text-center pb-2">
+            Flush @String.Format("v{0}", System.Diagnostics.FileVersionInfo.GetVersionInfo(typeof(Flush.Program).Assembly.Location).ProductVersion), built on @System.IO.File.GetCreationTime(typeof(Flush.Program).Assembly.Location).ToUniversalTime()
+        </div>
+        <div class="text-muted text-center">
+            &copy; 2020 - <a href="https://www.linkedin.com/in/championofgoats/">Leif Walker-Grant</a>
+        </div>
+    </div>
+</form>
+
+<script></script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

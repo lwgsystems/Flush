@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flush</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/chart/dist/Chart.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="~/lib/chart/dist/Chart.js"></script>
+    <script src="https://kit.fontawesome.com/50326a7491.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container" id="navbararea">
+                <a class="navbar-brand" asp-area="" asp-page="/Index">ScrumPokerClub</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+                    <ul class="navbar-nav flex-grow-1">
+                        <!--<li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+                        </li>-->
+                    </ul>
+                </div>
+                <form class="form-inline">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                <input type="checkbox" id="playerIsObserver" aria-label="Checkbox for observers" class="mr-2">
+                                I'm just observing.
+                            </div>
+                        </div>
+                        <input type="text" readonly class="form-control" aria-label="Default" id="myroomname" placeholder="It's lonely here..." />
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-danger my-2 my-sm-0" type="submit" id="leaveRoomButton" disabled>Leave</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 text-left">
+                    &copy; 2020 - <a href="https://www.linkedin.com/in/championofgoats/">Leif Walker-Grant</a>
+                </div>
+                <div class="col-md-6 text-right">
+                    Flush @String.Format("v{0}", System.Diagnostics.FileVersionInfo.GetVersionInfo(typeof(Flush.Program).Assembly.Location).ProductVersion), built on @System.IO.File.GetCreationTime(typeof(Flush.Program).Assembly.Location).ToUniversalTime()
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div class="loading-overlay d-flex justify-content-center align-items-center" id="loader-complete">
+        <div id="loader-">
+            <div class="spinner-border text-danger align-middle spinner-load" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <span class="spinner-name align-bottom ml-2">ScrumPokerClub</span>
+        </div>
+    </div>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", required: false)
+
+    <script>
+        (function () {
+            $(document).ready(function () {
+                $('#loader-complete').remove();
+            });
+        })();
+    </script>
+</body>
+</html>

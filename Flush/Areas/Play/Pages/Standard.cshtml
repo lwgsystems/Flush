@@ -1,0 +1,93 @@
+﻿@page
+<div class="row justify-content-md-center" id="playerlist">
+</div>
+<div class="row">
+    <hr />
+</div>
+<div class="row justify-content-center" id="playareamain">
+    <ul class="nav nav-tabs" id="myTab" role="tablist" style="display: none;">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="vote-tab" data-toggle="tab" href="#votingtab" role="tab">Vote</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="results-tab" data-toggle="tab" href="#resultstab" role="tab">Results</a>
+        </li>
+    </ul>
+    <div class="tab-content w-75" id="myTabContent">
+        <div class="tab-pane fade show active mb-3" id="votingtab" role="tabpanel" aria-labelledby="vote-tab">
+            <div class="btn-group-vertical btn-group-toggle d-flex mb-4" role="group" data-toggle="buttons">
+                <div class="btn-group btn-group-xl" role="group">
+                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="0">
+                        <input type="radio" name="zero" />0
+                    </label>
+                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="1">
+                        <input type="radio" name="half" />&half;
+                    </label>
+                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="2">
+                        <input type="radio" name="one" />1
+                    </label>
+                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="3">
+                        <input type="radio" name="two" />2
+                    </label>
+                </div>
+                <div class="btn-group btn-group-xl" role="group">
+                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="4">
+                        <input type="radio" name="three" />3
+                    </label>
+                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="5">
+                        <input type="radio" name="five" />5
+                    </label>
+                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="6">
+                        <input type="radio" name="eight" />8
+                    </label>
+                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="7">
+                        <input type="radio" name="thirteen" />13
+                    </label>
+                </div>
+                <div class="btn-group btn-group-xl" role="group">
+                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="8">
+                        <input type="radio" name="twentyone" />21
+                    </label>
+                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="9">
+                        <input type="radio" name="forty" />40
+                    </label>
+                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="10">
+                        <input type="radio" name="onehundred" />100
+                    </label>
+                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="11">
+                        <input type="radio" name="unknown" />?
+                    </label>
+                </div>
+            </div>
+            <div class="col text-center">
+                <button type="button" class="btn btn-lg btn-outline-success" id="revealVote">Reveal!</button>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="resultstab" role="tabpanel" aria-labelledby="results-tab">
+            <canvas id="resultsChart" class="mb-4">
+            </canvas>
+            <div class="col text-center">
+                <button type="button" class="btn btn-lg btn-outline-success" id="resetVote">Next vote</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade in" id="relogModal" tabindex="-1" role="dialog" aria-labelledby="relogModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="relogModalLabel">Oh boy, that doesn't look right...</h5>
+            </div>
+            <div class="modal-body">
+                Looks like we've lost connection to the server. No big deal -- nothing logging in again can't fix.
+                Let's get you sorted. Click 'take me there' to continue.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="relogButton">Take me there.</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/signalr/dist/browser/signalr.js"></script>

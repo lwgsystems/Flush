@@ -1,0 +1,40 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="h-100">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flush</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/chart/dist/Chart.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/chart/dist/Chart.js"></script>
+    <script src="https://kit.fontawesome.com/50326a7491.js" crossorigin="anonymous"></script>
+    <style>
+        .background-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+
+            background: url('/img/fsf_background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            opacity: 0.3;
+            /* filter: blur(10px); */
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="h-100">
+    <div class="w-100 h-100 background-image"></div>
+    <div class="container h-100">
+        <div class="row h-100 justify-content-center align-items-center">
+            <div class="p-5 border border-light rounded shadow bg-white">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+</body>
+@RenderSection("Scripts", required: false)
+</html>
