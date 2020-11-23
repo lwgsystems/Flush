@@ -1,12 +1,13 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
+using System.Security.Claims;
 using Flush.Data;
 using Flush.Data.Game;
-using Flush.Data.Game.EfCore;
 using Flush.Data.Game.InMemory;
 using Flush.Data.Identity;
 using Flush.Data.Identity.Model;
+using Flush.Extensions;
 using Flush.Hubs;
 using Flush.Providers;
 using Flush.Utils;
@@ -55,12 +56,10 @@ namespace Flush
             services.Configure<IdentityDatabaseOptions>(identityDbSection)
                 .Configure<JwtOptions>(jwtAuthenticationSection)
                 .Configure<FlushDatabaseOptions>(flushDbSection)
+                .AddDbContext<IdentityContext>()
                 .AddTransient<AuthenticationProvider>()
-                .AddSingleton<InMemoryDataStore>()
-                .AddSingleton<AutomaticLogoutProvider>()
-                .AddDbContext<FlushContext>(ServiceLifetime.Singleton)
-                .AddSingleton<IDataStore, FlushDataStore>()
-                .AddDbContext<IdentityContext>();
+                .AddSingleton<IDataStore2, InMemoryDataStore>()
+                .AddSingleton<UserPurgeProvider>();
 
             services.AddIdentity<ApplicationUser, ApplicationRole>()
                 .AddEntityFrameworkStores<IdentityContext>()
@@ -159,6 +158,10 @@ namespace Flush
                 endpoints.MapRazorPages();
                 endpoints.MapHub<PokerGameHub>("/pokergamehub");
             });
+
+            // We have to request the purge provider at least once, to ensure it
+            // gets initialised.
+            var _ = app.ApplicationServices.GetRequiredService<UserPurgeProvider>();
         }
     }
 }

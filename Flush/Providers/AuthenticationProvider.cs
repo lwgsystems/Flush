@@ -18,24 +18,20 @@ namespace Flush.Providers
     /// </summary>
     public class LoginCredentials
     {
+        [Required]
         public string Email { get; set; }
 
+        [Required]
         public string Password => "P@ssw0rd";
     }
 
     /// <summary>
     /// Models a user registration request.
     /// </summary>
-    public class UserDetails
+    public class UserDetails : LoginCredentials
     {
         [Required]
         public string Username { get; set; }
-
-        [Required]
-        public string Password => "P@ssw0rd";
-
-        [Required]
-        public string Email { get; set; }
     }
 
     /// <summary>
@@ -97,12 +93,13 @@ namespace Flush.Providers
         /// <summary>
         /// Log out a user.
         /// </summary>
-        /// <param name="credentials">The request.</param>
+        /// <param name="user">The user.</param>
         /// <returns>True if successful, else false.</returns>
-        public async Task<bool> Logout(LoginCredentials credentials)
+        public async Task<bool> Logout(string user)
         {
             _logger.LogDebug("user is logging out of the application");
-            var findResult = await _userManager.FindByEmailAsync(credentials.Email);
+
+            var findResult = await _userManager.FindByEmailAsync(user.Replace('_', '@'));
             if (findResult is null)
             {
                 _logger.LogDebug("The user doesn't exist");

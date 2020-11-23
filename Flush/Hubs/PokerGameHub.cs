@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Flush.Data.Game.InMemory;
+using Flush.Data.Game;
 using Flush.Data.Game.Model;
 using Flush.Extensions;
-using Flush.Providers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using Flush.Hubs.Requests;
+using Flush.Hubs.Responses;
 
 namespace Flush.Hubs
 {
@@ -20,8 +20,14 @@ namespace Flush.Hubs
     public class PokerGameHub : Hub
     {
         private ILogger<PokerGameHub> _logger;
-        private InMemoryDataStore _inMemoryDataStore;
-        private AutomaticLogoutProvider _automaticLogoutProvider;
+        private readonly IDataStore2 dataStore2;
+
+        private string Player =>
+            Context.User.FindFirst(ClaimTypes.NameIdentifier)?.GetFlushUsername();
+        private string Room =>
+            Context.User.FindFirst(ClaimTypes.NameIdentifier)?.GetFlushRoom();
+        private string PlayerID =>
+            Context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         /// <summary>
         /// Constructs a new hub.
@@ -30,12 +36,38 @@ namespace Flush.Hubs
         /// <param name="logger">The logger.</param>
         /// <param name="logoutProvider">The logout provider.</param>
         public PokerGameHub(ILogger<PokerGameHub> logger,
-            InMemoryDataStore playerInfo,
-            AutomaticLogoutProvider logoutProvider)
+            IDataStore2 playerInfo)
         {
             _logger = logger;
-            _inMemoryDataStore = playerInfo;
-            _automaticLogoutProvider = logoutProvider;
+            dataStore2 = playerInfo;
+        }
+
+        /// <summary>
+        /// Construct a GameStateInfo structure.
+        /// </summary>
+        /// <returns>A filled GameStateInfo</returns>
+        private PlayerConnectedRequiresGameStateResponse CreatePlayerConnectedRequiresGameStateResponse()
+        {
+            _logger.LogDebug($"Enter {nameof(CreatePlayerConnectedRequiresGameStateResponse)}");
+
+            var player = dataStore2.GetPlayerState(PlayerID);
+            var playerConnectedRequiresGameStateResponse = new PlayerConnectedRequiresGameStateResponse()
+            {
+                Phase = dataStore2.GetGamePhase(Room),
+                Players = dataStore2.PlayersIn(Room)
+                    .Select(p => new PlayerConnectedRequiresGameStateResponse.PlayerData()
+                    {
+                        PlayerID = p.PlayerId,
+                        Player = p.Name,
+                        Vote = p.Vote,
+                        AvatarID = p.AvatarId,
+                        IsModerator = p.IsModerator,
+                        IsObserver = p.IsObserver
+                    })
+            };
+
+            _logger.LogDebug($"Exit {nameof(CreatePlayerConnectedRequiresGameStateResponse)}");
+            return playerConnectedRequiresGameStateResponse;
         }
 
         /// <summary>
@@ -45,43 +77,43 @@ namespace Flush.Hubs
         public override async Task OnConnectedAsync()
         {
             _logger.LogDebug($"Enter {nameof(OnConnectedAsync)}");
-            _logger.LogDebug($"Player '{Context.UserIdentifier}' ('{Context.ConnectionId}') connected.");
+            _logger.LogDebug($"Player {Context.ConnectionId} connected as {PlayerID}.");
 
-            // cancel the logout, if one exists.
-            _automaticLogoutProvider.Cancel(Context.User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var claim = Context.User.FindFirst(ClaimTypes.NameIdentifier);
-            var user = claim.GetFlushUsername();
-            var room = claim.GetFlushRoom();
-
-            await Groups.AddToGroupAsync(Context.ConnectionId, room);
+            await Groups.AddToGroupAsync(Context.ConnectionId, Room);
 
             // If we're the first to join, move to voting.
-            if (!_inMemoryDataStore.AnyPlayersIn(room))
+            if (!dataStore2.AnyPlayersIn(Room))
             {
-                _inMemoryDataStore.SetGamePhase(room, GamePhase.Voting);
+                dataStore2.SetGamePhase(Room, GamePhase.Voting);
             }
 
             // If the player hasn't connected before, add a state container
-            if (_inMemoryDataStore.GetPlayerState(Context.UserIdentifier) == null)
+            if (dataStore2.GetPlayerState(PlayerID) == null)
             {
-                _inMemoryDataStore.AddPlayer(Context.UserIdentifier, user, room);
+                dataStore2.AddPlayer(PlayerID, Player, Room);
+            } else
+            {
+                dataStore2.SetConnectionState(PlayerID, true);
             }
 
             // Construct game state and send downstream to new player.
-            var gameStateInfo = ConstructGameStateInfo();
+            var playerConnectedRequiresGameStateResponse = CreatePlayerConnectedRequiresGameStateResponse();
             await Clients
                 .Caller
-                .SendAsync("ReceiveGameStateFromJoinRoom", gameStateInfo);
+                .SendAsync("ReceiveGameStateFromJoinRoom", playerConnectedRequiresGameStateResponse);
 
             // Notify everyone else
-            var playerJoinInfo = new
+            var avatarId = dataStore2.GetPlayerState(PlayerID).AvatarId;
+            var playerConnectedResponse = new PlayerConnectedResponse()
             {
-                PlayerId = Context.UserIdentifier,
-                user
+                PlayerID = PlayerID,
+                Player = Player,
+                AvatarID = avatarId
             };
+
             await Clients
-                .OthersInGroup(room)
-                .SendAsync("PlayerJoined", playerJoinInfo);
+                .OthersInGroup(Room)
+                .SendAsync("PlayerJoined", playerConnectedResponse);
 
             _logger.LogDebug($"Exit {nameof(OnConnectedAsync)}");
         }
@@ -94,167 +126,117 @@ namespace Flush.Hubs
         public override async Task OnDisconnectedAsync(Exception exception)
         {
             _logger.LogDebug($"Enter {nameof(OnDisconnectedAsync)}");
-
-            _logger.LogDebug($"Player '{Context.UserIdentifier}' ('{Context.ConnectionId}') disconnected.");
+            _logger.LogDebug($"Player '{PlayerID}' ('{Context.ConnectionId}') disconnected.");
 
             // Disconnected is a strange state. It may not be deliberate.
-            // We'll remove this connection id from the group but, for now,
-            // we won't notify any of the users of the disconnection, nor will
-            // we treat the user as disconnected.
-            var player = _inMemoryDataStore.GetPlayerState(Context.UserIdentifier);
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, player.Group);
-
-            // We'll use this opportunity to schedule their logout.
-            _automaticLogoutProvider.Add(
-                Context.User.FindFirstValue(ClaimTypes.NameIdentifier));
+            // We'll treat the user as gone, and notify the clients.
+            // However, there will be a delay between this and the user being purged.
+            // If they reconnect, it'll be like nothing happened.
+            var player = dataStore2.GetPlayerState(PlayerID);
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, Room);
+            dataStore2.SetConnectionState(PlayerID, false);
+            await Clients.Group(Room)
+                .SendAsync("PlayerDisconnected", new PlayerDisconnectedResponse()
+                {
+                    PlayerID = PlayerID
+                });
 
             _logger.LogDebug($"Exit {nameof(OnDisconnectedAsync)}");
         }
 
-        /// <summary>
-        /// Construct a GameStateInfo structure.
-        /// </summary>
-        /// <returns>A filled GameStateInfo</returns>
-        private object ConstructGameStateInfo()
-        {
-            _logger.LogDebug($"Enter {nameof(ConstructGameStateInfo)}");
-
-            var player = _inMemoryDataStore.GetPlayerState(Context.UserIdentifier);
-            var gameStateInfo = new
-            {
-                Phase = _inMemoryDataStore.GetGamePhase(player.Group),
-                Players = _inMemoryDataStore.PlayersIn(player.Group)
-                    .Select(p => new
-                    {
-                        p.PlayerId,
-                        p.Name,
-                        p.Vote
-                    })
-            };
-
-            _logger.LogDebug($"Exit {nameof(ConstructGameStateInfo)}");
-            return gameStateInfo;
-        }
-
-        /// <summary>
-        /// Construct a GameResultInfo structure.
-        /// </summary>
-        /// <returns>A filled GameResultInfo</returns>
-        private object ConstructGameResultInfo()
-        {
-            _logger.LogDebug($"Enter {nameof(ConstructGameResultInfo)}");
-
-            var player = _inMemoryDataStore.GetPlayerState(Context.UserIdentifier);
-            var gameResultInfo = new
-            {
-                Votes = _inMemoryDataStore.PlayersIn(player.Group)
-                    .Where(p => !p.IsObserver)
-                    .Select(p => new
-                    {
-                        p.PlayerId,
-                        p.Vote
-                    })
-            };
-
-            _logger.LogDebug($"Exit {nameof(ConstructGameResultInfo)}");
-            return gameResultInfo;
-        }
-
-        /// <summary>
-        /// Leave a room.
-        /// </summary>
-        /// <param name="user">The user who is leaving.</param>
-        /// <returns>A task representing the request.</returns>
-        /// <remarks>
-        /// This is called by the auto-logout provider
-        /// </remarks>
-        public async Task LeaveRoom(string user)
-        {
-            _logger.LogDebug($"Enter {nameof(LeaveRoom)}");
-
-            // remove player from the group and store
-            // the player state object lives so long as we have a handle to it
-            // here.
-            var player = _inMemoryDataStore.GetPlayerState(user);
-            _inMemoryDataStore.RemovePlayer(user);
-
-            // If everyone has left, change to finished state.
-            if (!_inMemoryDataStore.AnyPlayersIn(player.Group))
-            {
-                _logger.LogDebug($"All players have left {player.Group}, transitioning to finished.");
-                _inMemoryDataStore.SetGamePhase(player.Group, GamePhase.Finished);
-                return;
-            }
-
-            await Clients
-                .Group(player.Group)
-                .SendAsync("PlayerLeft", user);
-
-            _logger.LogDebug($"Exit {nameof(LeaveRoom)}");
-        }
 
         /// <summary>
         /// Notify clients that a user has voted.
         /// </summary>
         /// <param name="inVote">The vote.</param>
         /// <returns>A task representing the request.</returns>
-        public async Task SendVote(string inVote)
+        public async Task SendVote(SendVoteRequest request)
         {
             _logger.LogDebug($"Enter {nameof(SendVote)}");
 
-            var player = _inMemoryDataStore.GetPlayerState(Context.UserIdentifier);
-            var gamePhase = _inMemoryDataStore.GetGamePhase(player.Group);
+            var player = dataStore2.GetPlayerState(PlayerID);
+            var gamePhase = dataStore2.GetGamePhase(Room);
             if (gamePhase != GamePhase.Voting)
             {
-                _logger.LogError($"Player '{Context.UserIdentifier}' attempted to vote during a non-voting phase of play.");
+                _logger.LogError($"Player '{PlayerID}' attempted to vote during a non-voting phase of play.");
                 return;
             }
 
             if (player.IsObserver)
             {
-                _logger.LogInformation($"Player '{Context.UserIdentifier}' attempted to vote, but is an observer." +
+                _logger.LogInformation($"Player '{PlayerID}' attempted to vote, but is an observer." +
                     $"Their vote has been recorded, but will be ignored when delivering results.");
             }
 
-            if (int.TryParse(inVote, out int outVote))
+            _logger.LogDebug($"In vote is {request.Vote}.");
+            if (!int.TryParse(request.Vote, out int outVote) && !(
+                outVote < (int)ModifiedFibonacciVote.Zero ||
+                outVote > (int)ModifiedFibonacciVote.Unknown))
             {
-                if (outVote < (int)ModifiedFibonacciVote.Zero
-                   || outVote > (int)ModifiedFibonacciVote.Unknown)
-                {
-                    _logger.LogError($"Player '{Context.UserIdentifier}' sent an illegal vote.");
+                    _logger.LogError($"Player '{PlayerID}' sent an illegal vote.");
                     return;
-                }
-
-                _inMemoryDataStore.SetVote(Context.UserIdentifier, outVote);
-                await Clients
-                    .Group(player.Group)
-                    .SendAsync("PlayerVoted", Context.UserIdentifier);
             }
 
+            _logger.LogDebug($"Outvote is {outVote}.");
+            dataStore2.SetVote(PlayerID, outVote);
+            await Clients
+                .Group(Room)
+                .SendAsync("PlayerVoted", new SendVoteResponse() { PlayerID = PlayerID });
+
             _logger.LogDebug($"Exit {nameof(SendVote)}");
+        }
+
+        /// <summary>
+        /// Construct a SendResultResponse structure.
+        /// </summary>
+        /// <returns>A filled SendResultResponse</returns>
+        private SendResultResponse CreateSendResultResponse()
+        {
+            _logger.LogDebug($"Enter {nameof(CreateSendResultResponse)}");
+
+            var player = dataStore2.GetPlayerState(PlayerID);
+            var sendResultResponse = new SendResultResponse()
+            {
+                Votes = dataStore2.PlayersIn(Room)
+                    .Where(p => !p.IsObserver && p.Vote.HasValue)
+                    .Select(p => new SendResultResponse.VoteInfo()
+                    {
+                        PlayerID = p.PlayerId,
+                        Vote = p.Vote.Value
+                    })
+            };
+
+            _logger.LogDebug($"Exit {nameof(CreateSendResultResponse)}");
+            return sendResultResponse;
         }
 
         /// <summary>
         /// Inform the clients to reveal the votes.
         /// </summary>
         /// <returns>A task representing the request.</returns>
-        public async Task SendResult()
+        public async Task SendResult(SendResultRequest request)
         {
             _logger.LogDebug($"Enter {nameof(SendResult)}");
 
-            var player = _inMemoryDataStore.GetPlayerState(Context.UserIdentifier);
-            var gamePhase = _inMemoryDataStore.GetGamePhase(player.Group);
-            if (gamePhase != GamePhase.Voting)
+            var player = dataStore2.GetPlayerState(PlayerID);
+            if (!player.IsModerator)
             {
-                _logger.LogError($"Player '{Context.UserIdentifier}' requested vote results during a non-voting phase of play.");
+                _logger.LogError($"Player '{PlayerID}' tried to perform a moderator-only action.");
                 return;
             }
 
-            var gameResultInfo = ConstructGameResultInfo();
-            _inMemoryDataStore.SetGamePhase(player.Group, GamePhase.Results);
+            var gamePhase = dataStore2.GetGamePhase(Room);
+            if (gamePhase != GamePhase.Voting)
+            {
+                _logger.LogError($"Player '{PlayerID}' requested vote results during a non-voting phase of play.");
+                return;
+            }
+
+            var sendResultResponse = CreateSendResultResponse();
+            dataStore2.SetGamePhase(Room, GamePhase.Results);
             await Clients
-                .Group(player.Group)
-                .SendAsync("StartDiscussionPhase", gameResultInfo);
+                .Group(Room)
+                .SendAsync("StartDiscussionPhase", sendResultResponse);
 
             _logger.LogDebug($"Exit {nameof(SendResult)}");
         }
@@ -263,29 +245,33 @@ namespace Flush.Hubs
         /// Inform the clients to reset the vote.
         /// </summary>
         /// <returns>A task representing the request.</returns>
-        public async Task BeginVoting()
+        public async Task BeginVoting(BeginVotingRequest request)
         {
             _logger.LogDebug($"Enter {nameof(BeginVoting)}");
 
-            var player = _inMemoryDataStore.GetPlayerState(Context.UserIdentifier);
-            var gamePhase = _inMemoryDataStore.GetGamePhase(player.Group);
+            var player = dataStore2.GetPlayerState(PlayerID);
+            if (!player.IsModerator)
+            {
+                _logger.LogError($"Player '{PlayerID}' tried to perform a moderator-only action.");
+                return;
+            }
+
+            var gamePhase = dataStore2.GetGamePhase(Room);
             if (gamePhase != GamePhase.Results)
             {
-                _logger.LogError($"Player '{Context.UserIdentifier}' requested vote results during a non-results phase of play.");
+                _logger.LogError($"Player '{PlayerID}' requested a return to voting during a non-results phase of play.");
                 return;
             }
 
             // reset the votes
-            // TODO: a more elegant way of achieving this (just a 'reset' will
-            // do, tbh.)
-            var players = _inMemoryDataStore.PlayersIn(player.Group);
+            var players = dataStore2.PlayersIn(Room);
             foreach (var p in players)
-                _inMemoryDataStore.SetVote(p.PlayerId, null);
+                dataStore2.SetVote(p.PlayerId, null);
 
-            _inMemoryDataStore.SetGamePhase(player.Group, GamePhase.Voting);
+            dataStore2.SetGamePhase(Room, GamePhase.Voting);
             await Clients
-                .Group(player.Group)
-                .SendAsync("StartVotingPhase");
+                .Group(Room)
+                .SendAsync("StartVotingPhase", new BeginVotingResponse());
 
             _logger.LogDebug($"Exit {nameof(BeginVoting)}");
         }
@@ -295,22 +281,27 @@ namespace Flush.Hubs
         /// </summary>
         /// <param name="isObserver">If this player is an observer.</param>
         /// <returns>A task representing the request.</returns>
-        public async Task SendPlayerChange(bool isObserver)
+        public async Task SendPlayerChange(SendPlayerChangeRequest request)
         {
             _logger.LogDebug($"Enter {nameof(SendPlayerChange)}");
 
-            _inMemoryDataStore.SetIsObserver(Context.UserIdentifier, isObserver);
-            var player = _inMemoryDataStore.GetPlayerState(Context.UserIdentifier);
-            var playerChangeInfo = new
+            var player = dataStore2.GetPlayerState(PlayerID);
+            var observer = request.Observer ?? player.IsObserver;
+            var moderator = request.Moderator ?? player.IsModerator;
+
+            dataStore2.SetIsObserver(PlayerID, observer);
+            dataStore2.SetIsModerator(PlayerID, moderator);
+
+            var sendPlayerChangeResponse = new SendPlayerChangeResponse()
             {
-                PlayerId = Context.UserIdentifier,
-                player.IsObserver,
-                HasVoted = player.Ready
+                PlayerID = PlayerID,
+                IsObserver = observer,
+                IsModerator = moderator
             };
 
             await Clients
-                .Group(player.Group)
-                .SendAsync("PlayerChanged", playerChangeInfo);
+                .Group(Room)
+                .SendAsync("PlayerChanged", sendPlayerChangeResponse);
 
             _logger.LogDebug($"Exit {nameof(SendPlayerChange)}");
         }

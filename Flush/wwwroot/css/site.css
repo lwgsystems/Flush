@@ -24,8 +24,6 @@ a {
     border-color: #1861ac;
 }
 
-/* Sticky footer styles
--------------------------------------------------- */
 html {
     font-size: 14px;
 }
@@ -77,11 +75,10 @@ body {
     flex-wrap: wrap;
 }
 
-.btn-group-xl>.btn {
+.btn-group-xl * {
     font-size: 3rem;
     line-height: 1.5;
     border-radius: .3rem;
-    flex: 1;
 }
 
 .loading-overlay {
@@ -104,6 +101,176 @@ body {
     font-size: 3rem;
 }
 
+.vote {
+    margin: 0;
+}
+
 .vote-fw {
-    width: 2em;
+    width: 1.25rem;
+}
+
+.btn .fas {
+    line-height: 1.5em;
+}
+
+.nav-tabs {
+    display: none;
+}
+
+/* player icons
+-------------------------------------------------- */
+
+.player-icon {
+    font-family: "Font Awesome 5 Free";
+    font-size: 1rem;
+    line-height: 2rem;
+
+    width: 3rem;
+    height: 3rem;
+    position: relative;
+    border-radius: 1.5rem;
+
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.player-icon:after,
+.player-icon:before {
+    position: absolute;
+    border-radius: .75rem;
+    font-size: .75rem;
+    line-height: 1.5rem;
+    text-align: center;
+    color: white;
+}
+
+.player-icon:before {
+    height: 1.5rem;
+    width: 1.5rem;
+    left: -.5rem;
+    top: -.5rem;
+}
+
+.player-icon:after {
+    content: "";
+    height: .75rem;
+    width: .75rem;
+    right: 0;
+    bottom: 0;
+    background: lightskyblue;
+
+    color: darkgreen;
+    font-weight: bold;
+
+    transition-property: width, height, right, bottom;
+    transition-duration: .1s;
+    transition-timing-function: linear;
+}
+
+.player-icon.voted:after {
+    background: lightgreen;
+}
+
+.player-icon.display-vote:after {
+    width: 1.5rem;
+    height: 1.5rem;
+    right: -.5rem;
+    bottom: -.5rem;
+    content: attr(data-vote);
+}
+
+.player-icon.observer:before {
+    content: "\F1E5";
+    background-color: darkorchid;
+}
+
+.player-icon.moderator:before {
+    content: "\F3ED" !important;
+    background-color: darkcyan !important;
+}
+
+.player-icon.disconnected {
+    filter: grayscale(100%);
+}
+
+.player-name {
+    line-height: 3rem;
+    font-size: 1.25rem;
+}
+
+#playerlist {
+    margin-top: .25rem;
+}
+
+/* avatars
+-------------------------------------------------- */
+.player-icon[data-avatar="1"] {
+    background-image: url("/img/avatar/SVG/Asset 1.svg");
+}
+.player-icon[data-avatar="2"] {
+    background-image: url("/img/avatar/SVG/Asset 2.svg");
+}
+.player-icon[data-avatar="3"] {
+    background-image: url("/img/avatar/SVG/Asset 3.svg");
+}
+.player-icon[data-avatar="4"] {
+    background-image: url("/img/avatar/SVG/Asset 4.svg");
+}
+.player-icon[data-avatar="5"] {
+    background-image: url("/img/avatar/SVG/Asset 5.svg");
+}
+.player-icon[data-avatar="6"] {
+    background-image: url("/img/avatar/SVG/Asset 6.svg");
+}
+.player-icon[data-avatar="7"] {
+    background-image: url("/img/avatar/SVG/Asset 7.svg");
+}
+.player-icon[data-avatar="8"] {
+    background-image: url("/img/avatar/SVG/Asset 8.svg");
+}
+.player-icon[data-avatar="9"] {
+    background-image: url("/img/avatar/SVG/Asset 9.svg");
+}
+.player-icon[data-avatar="10"] {
+    background-image: url("/img/avatar/SVG/Asset 10.svg");
+}
+.player-icon[data-avatar="11"] {
+    background-image: url("/img/avatar/SVG/Asset 11.svg");
+}
+.player-icon[data-avatar="12"] {
+    background-image: url("/img/avatar/SVG/Asset 12.svg");
+}
+.player-icon[data-avatar="13"] {
+    background-image: url("/img/avatar/SVG/Asset 13.svg");
+}
+.player-icon[data-avatar="14"] {
+    background-image: url("/img/avatar/SVG/Asset 14.svg");
+}
+.player-icon[data-avatar="15"] {
+    background-image: url("/img/avatar/SVG/Asset 15.svg");
+}
+.player-icon[data-avatar="16"] {
+    background-image: url("/img/avatar/SVG/Asset 16.svg");
+}
+.player-icon[data-avatar="17"] {
+    background-image: url("/img/avatar/SVG/Asset 17.svg");
+}
+.player-icon[data-avatar="18"] {
+    background-image: url("/img/avatar/SVG/Asset 18.svg");
+}
+.player-icon[data-avatar="19"] {
+    background-image: url("/img/avatar/SVG/Asset 19.svg");
+}
+.player-icon[data-avatar="20"] {
+    background-image: url("/img/avatar/SVG/Asset 20.svg");
+}
+
+/* moderator enable
+-------------------------------------------------- */
+.moderator-only {
+    display: none;
+}
+
+#playareamain.moderator .moderator-only {
+    display: inline-block;
 }

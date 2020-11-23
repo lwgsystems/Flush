@@ -11,5 +11,10 @@
         /// <see cref="ModifiedFibonacciVote"/>
         /// </summary>
         ModifiedFibonacci,
+
+        /// <summary>
+        /// <see cref="TShirtSizeVote"/>
+        /// </summary>
+        TShirtSize,
     }
 }

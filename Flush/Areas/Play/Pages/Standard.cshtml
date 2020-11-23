@@ -1,90 +1,97 @@
 ﻿@page
-<div class="row justify-content-md-center" id="playerlist">
-</div>
-<div class="row">
-    <hr />
-</div>
-<div class="row justify-content-center" id="playareamain">
-    <ul class="nav nav-tabs" id="myTab" role="tablist" style="display: none;">
-        <li class="nav-item" role="presentation">
-            <a class="nav-link active" id="vote-tab" data-toggle="tab" href="#votingtab" role="tab">Vote</a>
-        </li>
-        <li class="nav-item" role="presentation">
-            <a class="nav-link" id="results-tab" data-toggle="tab" href="#resultstab" role="tab">Results</a>
-        </li>
-    </ul>
-    <div class="tab-content w-75" id="myTabContent">
-        <div class="tab-pane fade show active mb-3" id="votingtab" role="tabpanel" aria-labelledby="vote-tab">
-            <div class="btn-group-vertical btn-group-toggle d-flex mb-4" role="group" data-toggle="buttons">
-                <div class="btn-group btn-group-xl" role="group">
-                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="0">
-                        <input type="radio" name="zero" />0
-                    </label>
-                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="1">
-                        <input type="radio" name="half" />&half;
-                    </label>
-                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="2">
-                        <input type="radio" name="one" />1
-                    </label>
-                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="3">
-                        <input type="radio" name="two" />2
-                    </label>
-                </div>
-                <div class="btn-group btn-group-xl" role="group">
-                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="4">
-                        <input type="radio" name="three" />3
-                    </label>
-                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="5">
-                        <input type="radio" name="five" />5
-                    </label>
-                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="6">
-                        <input type="radio" name="eight" />8
-                    </label>
-                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="7">
-                        <input type="radio" name="thirteen" />13
-                    </label>
-                </div>
-                <div class="btn-group btn-group-xl" role="group">
-                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="8">
-                        <input type="radio" name="twentyone" />21
-                    </label>
-                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="9">
-                        <input type="radio" name="forty" />40
-                    </label>
-                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="10">
-                        <input type="radio" name="onehundred" />100
-                    </label>
-                    <label class="btn btn-outline-secondary vote w-100 py-5" data-value="11">
-                        <input type="radio" name="unknown" />?
-                    </label>
-                </div>
-            </div>
-            <div class="col text-center">
-                <button type="button" class="btn btn-lg btn-outline-success" id="revealVote">Reveal!</button>
-            </div>
-        </div>
-        <div class="tab-pane fade" id="resultstab" role="tabpanel" aria-labelledby="results-tab">
-            <canvas id="resultsChart" class="mb-4">
-            </canvas>
-            <div class="col text-center">
-                <button type="button" class="btn btn-lg btn-outline-success" id="resetVote">Next vote</button>
-            </div>
-        </div>
-    </div>
-</div>
+@using Flush.Data.Game.Model
+@using Flush.Extensions
+@using Flush.Utils
 
-<div class="modal fade in" id="relogModal" tabindex="-1" role="dialog" aria-labelledby="relogModalLabel">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="relogModalLabel">Oh boy, that doesn't look right...</h5>
+<div class="row" id="playareamain">
+    <div class="justify-content-sm-left col-sm-3" id="playerlist">
+    </div>
+    <div class="justify-content-center col-sm-9">
+        <ul class="nav nav-tabs col-sm-12" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="vote-tab" data-toggle="tab" href="#votingtab" role="tab">Vote</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="results-tab" data-toggle="tab" href="#resultstab" role="tab">Results</a>
+            </li>
+        </ul>
+        <div class="tab-content col-sm-12" id="myTabContent">
+            <div class="tab-pane fade show active mb-3" id="votingtab" role="tabpanel" aria-labelledby="vote-tab">
+                <div class="container" role="group" data-toggle="buttons">
+                    <div class="row justify-content-md-center btn-group-xl mb-4" role="group">
+                        @{ // v0.4
+                            // This is the start of the dynamic play mat.
+                            // We need this in order to support multiple voting schemes (e.g. MF, TShirt, etc.)
+                            // The idea is we simply lay out the grid, using the enum description for the text
+                            // And the integer equivalent as the vote!
+                            var votingModelType = TypeHelpers.Search($"{nameof(VotingModel.ModifiedFibonacci)}Vote");
+                            var votingModelValues = Enum.GetValues(votingModelType);
+                            for (var i = 0; i < votingModelValues.Length; ++i)
+                            {
+                                var vote = votingModelValues.GetValue(i);
+                                <div class="col-sm-3 p-1">
+                                    <label class="btn btn-outline-secondary vote py-5 w-100" data-value="@((int)vote)">
+                                        <input type="radio" name="@vote" style="display:none;"/>@(((Enum)vote).Description())
+                                    </label>
+                                </div>
+                            }
+                        }
+                    </div>
+                    <div class="row">
+                        <div class="col text-center">
+                            <button type="button" id="revealVote" class="btn btn-lg btn-outline-success moderator-only">Reveal!</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body">
-                Looks like we've lost connection to the server. No big deal -- nothing logging in again can't fix.
-                Let's get you sorted. Click 'take me there' to continue.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="relogButton">Take me there.</button>
+            <div class="tab-pane fade" id="resultstab" role="tabpanel" aria-labelledby="results-tab">
+                <div class="container">
+                    <div class="row mb-4">
+                        <canvas id="resultsChart">
+                        </canvas>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col card-group">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h1 class="card-text text-center text-muted display-4" id="min-card"></h1>
+                                </div>
+                                <div class="card-footer">
+                                    <h6 class="text-center text-muted">Min</h6>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-body">
+                                    <h1 class="card-text text-center text-muted display-4" id="mode-card"></h1>
+                                </div>
+                                <div class="card-footer">
+                                    <h6 class="text-center text-muted">Mode</h6>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-body">
+                                    <h1 class="card-text text-center text-muted display-4" id="max-card"></h1>
+                                </div>
+                                <div class="card-footer">
+                                    <h6 class="text-center text-muted">Max</h6>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-body">
+                                    <h1 class="card-text text-center text-muted display-4" id="votes-card"></h1>
+                                </div>
+                                <div class="card-footer">
+                                    <h6 class="text-center text-muted">Vote(s)</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col text-center">
+                            <button type="button" id="resetVote" class="btn btn-lg btn-outline-success moderator-only">Next Vote</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

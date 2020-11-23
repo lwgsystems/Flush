@@ -18,8 +18,12 @@ namespace Flush.Data.Game.Model
         /// <summary>
         /// The current state of this Game.
         /// </summary>
-        public GamePhase Phase { get; set; }
+        public GamePhase Phase { get; set; } = GamePhase.Created;
 
+        /// <summary>
+        /// The current voting model of this Game.
+        /// </summary>
+        public VotingModel Model { get; set; } = VotingModel.ModifiedFibonacci;
 
         /// <summary>
         /// The <see cref="Player"/>'s in this Game.

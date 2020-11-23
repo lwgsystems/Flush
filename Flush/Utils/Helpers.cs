@@ -72,35 +72,5 @@ namespace Flush.Utils
                 $"The secret key is \"{key}\"");
             return key;
         }
-
-        /// <summary>
-        /// Leave a room.
-        /// </summary>
-        /// <param name="roomName"></param>
-        /// <returns>A task representing the request.</returns>
-        /// <remarks>
-        /// This is called by the auto-logout provider
-        /// TODO: Needs moving somewhere more appropriate
-        /// </remarks>
-        public static async Task LeaveRoom(string user, InMemoryDataStore _inMemoryDataStore, IHubContext<PokerGameHub> hubContext)
-        {
-            // remove player from the group and store
-            // the player state object lives so long as we have a handle to it
-            // here.
-            var player = _inMemoryDataStore.GetPlayerState(user);
-            _inMemoryDataStore.RemovePlayer(user);
-
-            // If everyone has left, change to finished state.
-            if (!_inMemoryDataStore.AnyPlayersIn(player.Group))
-            {
-                //_logger.LogDebug($"All players have left {player.Group}, transitioning to finished.");
-                _inMemoryDataStore.SetGamePhase(player.Group, GamePhase.Finished);
-                return;
-            }
-
-            await hubContext.Clients
-                .Group(player.Group)
-                .SendAsync("PlayerLeft", user);
-        }
     }
 }

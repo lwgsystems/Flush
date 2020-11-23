@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.4
+
+Refactored AutomaticLogoutProvider into an independent service.
+
+Added moderator function.
+
+Added minimum, maximum and mode vote display.
+
+Added randomly assigned avatars for players.
+
+General UX Improvements.
+
 ## v0.3
 
 Added ASP.NET Core Identity 3 support. Flush configures ASP.NET Core Identity 3 with an encrypted sqlite backing store.

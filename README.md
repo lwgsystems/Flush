@@ -75,4 +75,8 @@ Flush may be run behind a mature reverse proxy such as IIS or NGINX. Please refe
 
 See [this document](Docs/CHANGELOG.md).
 
+## Known Issues
+
+See [this document](Docs/KNOWNISSUES.md).
+
 [logo]: Docs/flush-logo.png

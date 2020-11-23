@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Flush.Data.Game.Model;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +8,7 @@ namespace Flush.Data.Game.EfCore
     /// <summary>
     /// A data store for the Flush game, backed by an EF Core context.
     /// </summary>
-    public class FlushDataStore : IDataStore
+    public class FlushDataStore : IDataStore2
     {
         private readonly ILogger<FlushDataStore> _logger;
         private FlushContext _context;
@@ -25,193 +24,69 @@ namespace Flush.Data.Game.EfCore
             _logger = logger;
         }
 
-        /// <inheritdoc />
-        public Model.Game CreateGame(string gameId)
+        public void AddPlayer(string player, string name, string group)
         {
-            var game = new Model.Game
-            {
-                GameId = gameId,
-                Phase = GamePhase.Created,
-            };
-            _context.Games.Add(game);
-            _context.SaveChanges();
-            return game;
+            throw new NotImplementedException();
         }
 
-        /// <inheritdoc />
-        public bool GameExists(string gameId)
+        public bool AnyPlayersIn(string game)
         {
-            return _context.Games.SingleOrDefault(g => g.GameId == gameId) != default(Model.Game);
+            throw new NotImplementedException();
         }
 
-        /// <inheritdoc />
-        public IEnumerable<AuditLog> GetAllAuditLogs()
+        public bool GetConnectionState(string player)
         {
-            return _context.AuditLogs;
+            throw new NotImplementedException();
         }
 
-        /// <inheritdoc />
-        public AuditLog GetAuditLog(int auditLogId)
+        public IEnumerable<KeyValuePair<string, DateTime>> GetDisconnectedPlayers()
         {
-            return _context.AuditLogs.Single(al => al.AuditLogId == auditLogId);
+            throw new NotImplementedException();
         }
 
-        /// <inheritdoc />
-        public IEnumerable<AuditLog> GetAuditLogsForGame(string gameId)
+        public GamePhase GetGamePhase(string game)
         {
-            return _context.AuditLogs.Where(al => al.GameId == gameId);
+            throw new NotImplementedException();
         }
 
-        /// <inheritdoc />
-        public IEnumerable<AuditLog> GetAuditLogsForPlayer(string playerId)
+        public PlayerState GetPlayerState(string player)
         {
-            return _context.AuditLogs.Where(al => al.PlayerId == playerId);
+            throw new NotImplementedException();
         }
 
-        /// <inheritdoc />
-        public Model.Game GetGame(string gameId)
+        public IEnumerable<PlayerState> PlayersIn(string game)
         {
-            return _context.Games.Single(g => g.GameId == gameId);
+            throw new NotImplementedException();
         }
 
-        /// <inheritdoc />
-        public Model.Game GetGameForPlayer(string playerId)
+        public void RemovePlayer(string player)
         {
-            Model.Game game = null;
-            try
-            {
-                var player = GetPlayer(playerId);
-                game = GetGame(player.GameId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogDebug(ex, string.Empty);
-            }
-            return game;
+            throw new NotImplementedException();
         }
 
-        /// <inheritdoc />
-        public Player GetPlayer(string playerId)
+        public void SetConnectionState(string player, bool state)
         {
-            Player player = null;
-            try
-            {
-                player = _context.Players.Single(p => p.PlayerId == playerId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogDebug(ex, string.Empty);
-            }
-            return player;
+            throw new NotImplementedException();
         }
 
-        /// <inheritdoc />
-        public IEnumerable<Player> GetPlayersInGame(string gameId)
+        public void SetGamePhase(string game, GamePhase phase)
         {
-            return GetGame(gameId).Players;
+            throw new NotImplementedException();
         }
 
-        /// <inheritdoc />
-        public Player JoinGame(string gameId, string playerId, string playerName)
+        public void SetIsModerator(string player, bool isModerator)
         {
-            var game = _context.Games.Single(g => g.GameId == gameId);
-            var player = new Player
-            {
-                PlayerId = playerId,
-                Name = playerName,
-                GameId = game.GameId,
-                Game = game,
-                Vote = null,
-            };
-            _context.Players.Add(player);
-            _context.SaveChanges();
-            return player;
+            throw new NotImplementedException();
         }
 
-        /// <inheritdoc />
-        public void LeaveGame(string playerId)
+        public void SetIsObserver(string player, bool isObserver)
         {
-            var player = GetPlayer(playerId);
-            // TODO: Check this cascades and removes the game link.
-            _context.Players.Remove(player);
-            _context.SaveChanges();
+            throw new NotImplementedException();
         }
 
-        /// <inheritdoc />
-        public void ResetGame(string gameId)
+        public void SetVote(string player, int? vote)
         {
-            var game = _context.Games.Single(g => g.GameId == gameId);
-            game.Phase = GamePhase.Created;
-            foreach (var player in game.Players)
-            {
-                player.Vote = null;
-            }
-            _context.SaveChanges();
-        }
-
-        /// <inheritdoc />
-        public void SetGameOwner(string gameId, string playerId)
-        {
-            throw new NotSupportedException("Ownership/Moderation not supported.");
-        }
-
-        /// <inheritdoc />
-        public void SetGamePhase(string gameId, GamePhase gamePhase)
-        {
-            var game = GetGame(gameId);
-            game.Phase = gamePhase;
-            _context.SaveChanges();
-        }
-
-        /// <inheritdoc />
-        public Player SetObserver(string playerId, bool isObserver)
-        {
-            var player = GetPlayer(playerId);
-            player.IsObserver = isObserver;
-            _context.SaveChanges();
-            return player;
-        }
-
-        /// <inheritdoc />
-        public void Vote(string playerId, int vote)
-        {
-            var player = GetPlayer(playerId);
-            player.Vote = vote;
-            _context.SaveChanges();
-        }
-
-        /// <inheritdoc />
-        public Player GetPlayerByPrincipal(string aspNetIdentity)
-        {
-            var player = _context.Players
-                .SingleOrDefault(p => p.AspNetIdentity == aspNetIdentity);
-            return player;
-        }
-
-        /// <inheritdoc />
-        public Player SetPlayerId(string playerId, string newId)
-        {
-            var player = _context.Players
-                .SingleOrDefault(p => p.PlayerId == playerId);
-            if (player != null)
-            {
-                player.PlayerId = newId;
-                _context.SaveChanges();
-            }
-            return player;
-        }
-
-        /// <inheritdoc />
-        public Player SetPlayerPrincipal(string playerId, string aspNetIdentity)
-        {
-            var player = _context.Players
-                .SingleOrDefault(p => p.PlayerId == playerId);
-            if (player != null)
-            {
-                player.AspNetIdentity = aspNetIdentity;
-                _context.SaveChanges();
-            }
-            return player;
+            throw new NotImplementedException();
         }
     }
 }

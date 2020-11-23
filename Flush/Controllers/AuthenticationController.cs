@@ -91,15 +91,14 @@ namespace Flush.Controllers
         /// <summary>
         /// Log out the user.
         /// </summary>
-        /// <param name="credentials">The user credentials.</param>
+        /// <param name="user">The user.</param>
         /// <returns>OK on succesfully logout, else BadRequest.</returns>
         [HttpPost]
         [Route("Logout")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Logout(LoginCredentials credentials)
+        public async Task<IActionResult> Logout(string user)
         {
             _logger.LogCritical("Logout has been called.");
-            var result = await _provider.Logout(credentials);
+            var result = await _provider.Logout(user);
             if (result)
             {
                 return Ok(new
