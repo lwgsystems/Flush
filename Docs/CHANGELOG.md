@@ -12,6 +12,16 @@ Added randomly assigned avatars for players.
 
 General UX Improvements.
 
+## v0.4.1
+
+Fix an issue that could prevent moderator and observer icons from displaying in Chromium-based browsers.
+
+## v0.4.2
+
+Remove room query string arguments by placing token in local session storage.
+
+Minify CSS and JS assets.
+
 ## v0.3
 
 Added ASP.NET Core Identity 3 support. Flush configures ASP.NET Core Identity 3 with an encrypted sqlite backing store.

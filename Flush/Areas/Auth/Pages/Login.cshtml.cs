@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using Flush.Providers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
@@ -25,11 +26,6 @@ namespace Flush.Areas.Auth.Pages
         public string InputName { get; set; }
 
         /// <summary>
-        /// The URL to redirect to on successful log in.
-        /// </summary>
-        public string ReturnUrl => Url.Content("/game");
-
-        /// <summary>
         /// An error message returned during post, if applicable.
         /// </summary>
         [TempData]
@@ -52,6 +48,8 @@ namespace Flush.Areas.Auth.Pages
         /// <inheritdoc />
         public async Task<IActionResult> OnGetAsync(string r, string n)
         {
+            ViewData["Title"] = "Authorisation";
+
             if (!string.IsNullOrEmpty(ErrorMessage))
             {
                 ModelState.AddModelError(string.Empty, ErrorMessage);
@@ -69,12 +67,10 @@ namespace Flush.Areas.Auth.Pages
         }
 
         /// <summary>
-        /// Attempt to register and log in a new player.
+        /// Peforms guest user registration and generates a JWT.
         /// </summary>
-        /// <returns>
-        /// A redirect action on success, else a page with errors set.
-        /// </returns>
-        public async Task<IActionResult> OnPostAsync()
+        /// <returns>A JSON response containing a JWT.</returns>
+        public async Task<IActionResult> OnPostAcquireTokenAsync()
         {
             if (ModelState.IsValid)
             {
@@ -104,21 +100,28 @@ namespace Flush.Areas.Auth.Pages
                 });
                 if (token is null)
                 {
-                    ModelState.AddModelError(string.Empty, "We were unable to join that room.");
+                    ModelState.AddModelError(string.Empty, "An error occurred when trying to join the room.");
                     return Page();
                 }
 
-                return RedirectToPage("/Standard", new
-                {
-                    area = "Play",
-                    r = inputRoomLowercased,
-                    t = token
-                });
+                // Redirect back, with the token.
+                ViewData["Token"] = token;
+                return Page();
             }
 
             // If we got this far, something failed, redisplay form
             _logger.LogError("The model state was not valid.");
             return Page();
+        }
+
+        /// <summary>
+        /// Redirects to the game.
+        /// </summary>
+        /// <returns>A redirection to the game.</returns>
+        public async Task<IActionResult> OnPostAuthorisedRedirectAsync()
+        {
+            await Task.CompletedTask;
+            return RedirectToPage("/Standard", new { area = "Play" });
         }
     }
 }

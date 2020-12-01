@@ -2,27 +2,19 @@
 // for details on configuring this project to bundle and minify static web assets.
 "use strict";
 
-const generatePlayerCardV3 = (player) => `
+const generatePlayerCardV3 = function (player) {
+    return `
 <div class="mx-2 mt-2 mb-3 d-flex flex-row" id="${player.playerID}">
     <div class="player-icon" id="status-${player.playerID}" data-avatar="${player.avatarID}"></div>
     <div class="ml-3 player-name">${player.player}</div>
 </div>`;
+}
 
 const labels = ['0', '½', '1', '2', '3', '5', '8', '13', '21', '40', '100', '?'];
 const PHASE = Object.freeze({ Created: 0, Voting: 1, Results: 2, Finished: 3 });
 
-/* Extracts a parameter from the url. */
-const readParameter = (param) => {
-    const result = window.location.search
-        .substring(1)
-        .split('&')
-        .map(v => v.split('='))
-        .find(e => e[0] == param);
-    return result != undefined ? result[1] : undefined;
-}
-
 /* creates a chart from the data and context. */
-const createChart = (ctx, data) => {
+const createChart = function (ctx, data) {
     return new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -62,9 +54,9 @@ const createChart = (ctx, data) => {
 }
 
 /* maps a set of PVI structures to their vote count. */
-const mapVotesToCountAndSetDisplay = (arrayOfVoteInfo) => {
+const mapVotesToCountAndSetDisplay = function (arrayOfVoteInfo) {
     var votesNum = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    arrayOfVoteInfo.forEach(vi => {
+    arrayOfVoteInfo.forEach(function (vi) {
         if (vi.vote !== null) {
             votesNum[vi.vote] += 1;
             $(`#status-${vi.playerID}`).attr("data-vote", labels[vi.vote]);
@@ -74,12 +66,12 @@ const mapVotesToCountAndSetDisplay = (arrayOfVoteInfo) => {
 }
 
 /* Reusable error log function. */
-const logCaughtErr = (err) => console.error(err.toString());
+const logCaughtErr = function (err) { console.error(err.toString()) }
 
-$(document).ready(() => {
+$(document).ready(function () {
     var myChart = undefined;
     var currentPhase = PHASE.Created;
-    var token = readParameter('t');
+    var token = window.sessionStorage.getItem("spc_user_token")
 
     /*
      * Authenticate.
@@ -87,7 +79,7 @@ $(document).ready(() => {
 
     /* get a hub connection. */
     const connection = new signalR.HubConnectionBuilder()
-        .withUrl("/app/pokergamehub", { accessTokenFactory: () => token })
+        .withUrl("/app/pokergamehub", { accessTokenFactory: function () { return token } })
         .withAutomaticReconnect()
         .build();
 
@@ -95,8 +87,8 @@ $(document).ready(() => {
      * Configure the connection responses.
      */
 
-    connection.start().then(() => {
-        connection.onclose(e => {
+    connection.start().then(function () {
+        connection.onclose(function (e) {
             $('#disconnectedModalLong').modal({
                 backdrop: 'static',
                 keyboard: false
@@ -105,7 +97,7 @@ $(document).ready(() => {
     }).catch(logCaughtErr);
 
     /* received when a join occurs (even our own.) */
-    connection.on("PlayerJoined", playerConnectedResponse => {
+    connection.on("PlayerJoined", function (playerConnectedResponse) {
         if ($('#playerlist').has(`#${playerConnectedResponse.playerID}`).length == 0) {
             var playerCard = generatePlayerCardV3(playerConnectedResponse);
             $("#playerlist").append(playerCard);
@@ -115,18 +107,18 @@ $(document).ready(() => {
     });
 
     /* Received when a user disconnects. */
-    connection.on("PlayerDisconnected", playerDisconnectedResponse => {
+    connection.on("PlayerDisconnected", function (playerDisconnectedResponse) {
         $(`#status-${playerDisconnectedResponse.playerID}`).addClass("disconnected");
     });
 
     /* Received when a user has been disconnected for too long. */
-    connection.on("PlayerPurged", playerPurgedResponse => {
+    connection.on("PlayerPurged", function (playerPurgedResponse) {
         $(`#${playerPurgedResponse.playerID}`).remove()
     })
 
     /* Received in response to joining a room. */
-    connection.on("ReceiveGameStateFromJoinRoom", playerConnectedRequiresGameStateResponse => {
-        playerConnectedRequiresGameStateResponse.players.forEach(pd => {
+    connection.on("ReceiveGameStateFromJoinRoom", function (playerConnectedRequiresGameStateResponse) {
+        playerConnectedRequiresGameStateResponse.players.forEach(function (pd) {
             if (!$('#playerlist').has(`#${pd.playerID}`).length) {
                 var playerCard = generatePlayerCardV3(pd);
                 $("#playerlist").append(playerCard);
@@ -163,8 +155,8 @@ $(document).ready(() => {
             var votesNum = mapVotesToCountAndSetDisplay(playerConnectedRequiresGameStateResponse.players);
             myChart = createChart(ctx, votesNum);
 
-            // populate the stats
-            $('#votes-card').html(playerConnectedRequiresGameStateResponse.players.filter( v => v.vote != null ).length);
+            /* populate the stats */
+            $('#votes-card').html(playerConnectedRequiresGameStateResponse.players.filter(function (v) { return v.vote != null }).length);
             $('#min-card').html(labels[playerConnectedRequiresGameStateResponse.low]);
             $('#max-card').html(labels[playerConnectedRequiresGameStateResponse.high]);
             $('#mode-card').html(labels[playerConnectedRequiresGameStateResponse.mode]);
@@ -181,13 +173,13 @@ $(document).ready(() => {
     });
 
     /* Received when a vote is cast. */
-    connection.on("PlayerVoted", sendVoteResponse => {
+    connection.on("PlayerVoted", function (sendVoteResponse) {
         var id = `#status-${sendVoteResponse.playerID}`;
         $(id).addClass('voted');
     });
 
     /* Received when a moderator instructs a reveal. */
-    connection.on("StartDiscussionPhase", sendResultResponse => {
+    connection.on("StartDiscussionPhase", function (sendResultResponse) {
         currentPhase = PHASE.Results;
 
         var votesNum = mapVotesToCountAndSetDisplay(sendResultResponse.votes);
@@ -210,7 +202,7 @@ $(document).ready(() => {
     });
 
     /* Received when a moderator instructs a reset. */
-    connection.on("StartVotingPhase", beginVotingResponse => {
+    connection.on("StartVotingPhase", function (beginVotingResponse) {
         currentPhase = PHASE.Voting;
         $('.vote').removeClass('active');
         $('.vote').removeClass('focus');
@@ -221,7 +213,7 @@ $(document).ready(() => {
     });
 
     /* Received when a player toggles the observer status. */
-    connection.on("PlayerChanged", sendPlayerChangedResponse => {
+    connection.on("PlayerChanged", function (sendPlayerChangedResponse) {
         var id = `#status-${sendPlayerChangedResponse.playerID}`;
 
         sendPlayerChangedResponse.isObserver ? $(id).addClass('observer') : $(id).removeClass('observer');
