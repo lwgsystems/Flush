@@ -1,6 +1,14 @@
 ﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
 for details on configuring this project to bundle and minify static web assets. */
 
+:root {
+    --moderator: darkcyan;
+    --observer: darkorchid;
+    --voted: lightgreen;
+    --voting: tomato;
+    --voteTextColor: darkgreen;
+}
+
 a.navbar-brand {
     white-space: normal;
     text-align: center;
@@ -151,13 +159,13 @@ body {
 
 .player-icon:after {
     content: "";
-    height: .75rem;
-    width: .75rem;
-    right: 0;
-    bottom: 0;
-    background: lightskyblue;
+    height: 1rem;
+    width: 1rem;
+    right: -.25rem;
+    bottom: -.25rem;
+    background: var(--voting);
 
-    color: darkgreen;
+    color: var(--voteTextColor);
     font-weight: bold;
 
     transition-property: width, height, right, bottom;
@@ -165,26 +173,31 @@ body {
     transition-timing-function: linear;
 }
 
-.player-icon.voted:after {
-    background: lightgreen;
-}
-
+.player-icon.voted:after,
 .player-icon.display-vote:after {
     width: 1.5rem;
     height: 1.5rem;
     right: -.5rem;
     bottom: -.5rem;
+}
+
+.player-icon.voted:after {
+    content: "\F00C";
+    background: var(--voted);
+}
+
+.player-icon.display-vote:after {
     content: attr(data-vote);
 }
 
 .player-icon.observer:before {
     content: "\F1E5";
-    background-color: darkorchid;
+    background-color: var(--observer);
 }
 
 .player-icon.moderator:before {
     content: "\F3ED" !important;
-    background-color: darkcyan !important;
+    background-color: var(--moderator) !important;
 }
 
 .player-icon.disconnected {
