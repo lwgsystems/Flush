@@ -73,6 +73,7 @@ namespace Flush
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    /*
                     webBuilder.ConfigureKestrel(opts =>
                     opts.ConfigureHttpsDefaults(httpsOpts =>
                     {
@@ -99,6 +100,7 @@ namespace Flush
                             });
                         };
                     }));
+                    */
                     webBuilder.UseStartup<Startup>();
                 });
     }
