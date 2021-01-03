@@ -132,8 +132,8 @@ body {
     font-family: "FontAwesome", "Font Awesome 5 Free";
     font-size: 1rem;
     line-height: 2rem;
-    width: 3rem;
-    height: 3rem;
+    min-width: 3rem;
+    min-height: 3rem;
     position: relative;
     border-radius: 1.5rem;
     background-size: cover;
@@ -207,6 +207,9 @@ body {
 .player-name {
     line-height: 3rem;
     font-size: 1.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 #playerlist {
