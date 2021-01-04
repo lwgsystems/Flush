@@ -1,7 +1,6 @@
 using System;
 using System.Net.Security;
 using System.Security.Authentication;
-using Flush.Data.Game.EfCore;
 using Flush.Data.Identity;
 using Flush.Utils;
 using Microsoft.AspNetCore.Hosting;
@@ -27,7 +26,6 @@ namespace Flush
             using (var scope = host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
-                CreateOrMigrateDatabase<FlushContext>(services);
                 CreateOrMigrateDatabase<IdentityContext>(services);
             }
             host.Run();
@@ -73,34 +71,33 @@ namespace Flush
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    /*
-                    webBuilder.ConfigureKestrel(opts =>
-                    opts.ConfigureHttpsDefaults(httpsOpts =>
-                    {
-                        httpsOpts.SslProtocols = SslProtocols.Tls13 |
-                                                 SslProtocols.Tls12;
-                        httpsOpts.OnAuthenticate = (c, s) =>
+                    webBuilder.ConfigureKestrel(opts => {
+                        opts.ConfigureHttpsDefaults(httpsOpts =>
                         {
-                            s.CipherSuitesPolicy = new CipherSuitesPolicy(new[]
+                            httpsOpts.SslProtocols = SslProtocols.Tls13 |
+                                                     SslProtocols.Tls12;
+                            httpsOpts.OnAuthenticate = (c, s) =>
                             {
-                                // TLS 1.3
-                                TlsCipherSuite.TLS_CHACHA20_POLY1305_SHA256,
-                                TlsCipherSuite.TLS_AES_128_GCM_SHA256,
-                                TlsCipherSuite.TLS_AES_256_GCM_SHA384,
-                                // TLS 1.2
-                                TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
-                                TlsCipherSuite.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
-                                TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-                                TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-                                TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-                                TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-                                TlsCipherSuite.TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,
-                                TlsCipherSuite.TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,
-
-                            });
-                        };
-                    }));
-                    */
+                                s.CipherSuitesPolicy = new CipherSuitesPolicy(new[]
+                                {
+                                    // TLS 1.3
+                                    TlsCipherSuite.TLS_CHACHA20_POLY1305_SHA256,
+                                    TlsCipherSuite.TLS_AES_128_GCM_SHA256,
+                                    TlsCipherSuite.TLS_AES_256_GCM_SHA384,
+                                    // TLS 1.2
+                                    TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+                                    TlsCipherSuite.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+                                    TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+                                    TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+                                    TlsCipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+                                    TlsCipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+                                    TlsCipherSuite.TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,
+                                    TlsCipherSuite.TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,
+                                });
+                            };
+                        });
+                    });
+                    
                     webBuilder.UseStartup<Startup>();
                 });
     }

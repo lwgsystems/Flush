@@ -57,12 +57,7 @@ namespace Flush.Data.Game.EfCore
                 _databaseOptions.ConnectionString)
             {
                 Mode = SqliteOpenMode.ReadWriteCreate,
-                // It looks like SQLCipher slows down considerably during saves.
-                // DbContext isn't being closed each time it's used, so it's definitely encryption
-                // on CRUD.
-                // Password = Helpers.DeriveSecretKeyFromCertificate(
-                //     _databaseOptions.HashAlgorithm,
-                //     _databaseOptions.Thumbprint),
+                Password = _databaseOptions.Key
             }.ToString();
             optionsBuilder.UseSqlite(connectionString);
         }

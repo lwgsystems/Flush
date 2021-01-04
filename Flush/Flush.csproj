@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <SignAssembly>true</SignAssembly>
-    <ReleaseVersion>1.0.0</ReleaseVersion>
+    <ReleaseVersion>0.3.4a</ReleaseVersion>
     <DebugVersion>1.0.0</DebugVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -31,6 +31,7 @@
     <Folder Include="Data\Game\InMemory\" />
     <Folder Include="Extensions\" />
     <Folder Include="Areas\Play\Pages\Partials\" />
+    <Folder Include="data-sources\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.0" />

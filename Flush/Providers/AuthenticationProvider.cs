@@ -147,9 +147,7 @@ namespace Flush.Providers
         private object GenerateToken(IdentityUser identityUser)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var skey = Helpers.DeriveSecretKeyFromCertificate(_jwtOptions.HashAlgorithm,
-                _jwtOptions.Thumbprint);
-            var key = Encoding.Default.GetBytes(skey);
+            var key = Encoding.Default.GetBytes(_jwtOptions.Key);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {

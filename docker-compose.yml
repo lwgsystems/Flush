@@ -1,0 +1,18 @@
+version: '3'
+services:
+  flush:
+    container_name: 'flush'
+    build: .
+    ports:
+      - 80:5000
+      - 443:5001
+    volumes:
+      # Mount the appsettings file instead of baking it into the image.
+      - ./Flush/appsettings.json:/app/appsettings.json
+      # Mount the databases so that they persist on the host.
+      # The host side location can be anywhere.
+      - ./data/:/app/data-sources/
+      # Certs will be created if it doesn't exist, and may be left empty if not using HTTPS.
+      # See README.md, 'Enabling HTTPS'.
+      - ./certs/:/app/tls/
+    restart: always

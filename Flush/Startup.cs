@@ -80,10 +80,7 @@ namespace Flush
                     ValidateAudience = false,
                     ValidAudience = "Flush",
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.Default.GetBytes(
-                            Helpers.DeriveSecretKeyFromCertificate(jwtSettings.HashAlgorithm,
-                                                                   jwtSettings.Thumbprint))),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.Default.GetBytes(jwtSettings.Key)),
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.Zero
                 };

@@ -5,9 +5,6 @@ WORKDIR /app
 COPY . ./
 RUN dotnet publish -c Release -o out Flush.sln
 
-# Install a copy of the dotnet cert tool as a global tool
-RUN dotnet tool install --add-source ./dotnet-certificate-tool/src/nupkg --tool-path /app/out dotnet-certificate-tool
-
 # Pull asp.net core runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:5.0
 WORKDIR /app
@@ -15,8 +12,7 @@ WORKDIR /app
 # Copy in build output
 COPY --from=build-env /app/out .
 
-# Copy in certificates for use by flush/cert-tool
-COPY *.pfx ./
+# Copy in entrypoint
 COPY docker-entrypoint.sh .
 
 # Start the bootstrapper on run

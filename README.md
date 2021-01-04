@@ -6,70 +6,54 @@ Flush is a tool for facilitating and enhancing Agile planning activities; built 
 
 ## Prerequisites
 
-- Docker 17.06+.
+- Docker 17.06+
+- Docker Compose 3.0+
 
-A previous version of this document indicated the .NET Core 5.0 SDK as a prerequisite. The .NET Core 5.0 SDK is provided by an intermediate container during the build process, and is no longer required for the application as-shipped. However, should you wish to build and run Flush without the containers, you should ensure you have the .NET Core 5.0 SDK installed.
+## Getting Started
 
-## Configuring the Application
+All of the following steps assume you have checked out the application and `PWD` is the root of such.
 
-Flush uses X509 certificates in key derivation processes during the application runtime. You may use the same certificate for all purposes, though this is not recommended. The steps below illustrate how to configure one certificate, though these steps should be run once for each of the FlushDb, IdentityDb and JwtAuthentication sections of the appsettings file.
+### Pull Submodules
+
+Please issue `git submodule init && git submodule update` to ensure the latest versions of the submodules are present at build time.
+
+### Configure Application Security
+
+Flush uses the SQLCipher provider to enable cryptographically secured backing stores in EFCore.
+
+You will need to specify keys in the `FlushDb`, `IdentityDb` and `JwtAuthentication` sections of `appsettings.json`.
+
+You may use any alphanumeric value you wish for these keys however a script, `gen_keys.sh`, is provided to automatically generate and insert 2048-bit keys from the local random source.
+
+The keys you select are used in SQLCipher as the input to a SHA-3 512-bit key derivation function. This means that the actual encryption key used by the database will be different to your input key. The application, however, will still only require the input key to decrypt it.
+
+### Run Flush
+
+To build the container image and start Flush, run `docker-compose up` at the root of your checkout.
+
+## Enabling HTTPS
+
+By default Flush assumes it is run behind a mature reverse proxy and, as a result, HTTPS is not enabled. To enable HTTPS, please add the following to the `Kestrel.EndPoints` section of `appsettings.json`.
 
 ```
-# generate a private and public key
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout cert.key -out cert.crt
-
-# export the thumbprint - note this down
-openssl x509 -in cert.crt -noout -fingerprint
-
-# export it as a PKCS12 file
-openssl pkcs12 -export -out cert.pfx -inkey cert.key -in cert.crt
-
-# clean up
-rm cert.key cert.crt
-```
-
-You should then, for each certificate, add the thumbprint into the appsettings file as follows.
-
-```
-"YourCertSection": {
-   "HashAlgorithm": "SHA512",
-   "Thumbprint": "<the thumbprint you exported goes here.>"
+"HttpsInlineCertFile": {
+  "Url": "https://<host>:<port>",
+  "Certificate": {
+    "Path": "/app/tls/cert.pfx",
+    "Password": "<password for your cert.pfx>"
+  }
 }
 ```
 
-In this example, "YourCertSection" is a placeholder for the appropriate section of the config file: JwtAuthentication, FlushDb or IdentityDb.
+In the above section, replace the variables with values that suit your environment. If your certificate does not have a password, set `Password` to a blank string. The certificate should be stored at the root of your checkout, in a folder named `certs`.
 
-We include a script, `./gen_certs.sh`, which automates all of the above steps.
-
-## Running the Application
-
-Before you may run Flush, you will need to build the application and containers. Start by checking out the code, then use the `./build.sh` script to automatically compile and build the application and its container image. Lastly, run `./start.sh` to begin execution of the flush container.
+If you are running a development copy of this application, you can use the default dotnet development certificates by substituting the above with the below snippet. Again, please replace the variables with values that suit your environment.
 
 ```
-# clone the repo
-git clone git@github.com:ChampionOfGoats/Flush.git
-
-# change into the app root directory
-cd Flush
-
-# initialise the submodules
-git submodule init
-git submodule update
-
-# generate a set of certificates
-./gen_certs.sh --clean
-
-# build the container image
-./build.sh
-
-# start the container
-./start.sh --cert <your ssl cert> \
-    --cert-password <your ssl cert password> \ # only include this argument if your ssl cert is password protected.
-    --cert-dir <the location of your ssl cert> \
-    --data-dir <the location to store sqlite databases>
+"HttpsDefaultCert": {
+  "Url": "https://<host>:<port>"
+}
 ```
-
-Flush may be run behind a mature reverse proxy such as IIS or NGINX. Please refer to the documentation of your preferred reverse proxy software for guidance on configuring this.
 
 ## Changelog
 

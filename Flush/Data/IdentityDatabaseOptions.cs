@@ -10,9 +10,6 @@
         public string ConnectionString { get; set; }
 
         /// <inheritdoc />
-        public string HashAlgorithm { get; set; }
-
-        /// <inheritdoc />
-        public string Thumbprint { get; set; }
+        public string Key { get; set; }
     }
 }

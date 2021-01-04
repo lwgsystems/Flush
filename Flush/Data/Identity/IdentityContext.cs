@@ -39,9 +39,7 @@ namespace Flush.Data.Identity
                 _databaseOptions.ConnectionString)
             {
                 Mode = SqliteOpenMode.ReadWriteCreate,
-                //Password = Helpers.DeriveSecretKeyFromCertificate(
-                 //   _databaseOptions.HashAlgorithm,
-                 //   _databaseOptions.Thumbprint)
+                Password = _databaseOptions.Key
             }.ToString();
             optionsBuilder.UseSqlite(connectionString);
         }
