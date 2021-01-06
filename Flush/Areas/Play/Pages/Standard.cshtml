@@ -1,7 +1,6 @@
 ﻿@page
-@using Flush.Data.Game.Model
+@using Flush.Databases.Entities;
 @using Flush.Extensions
-@using Flush.Utils
 
 <div class="row" id="playareamain">
     <div class="justify-content-sm-left col-sm-3" id="playerlist">
@@ -24,7 +23,7 @@
                             // We need this in order to support multiple voting schemes (e.g. MF, TShirt, etc.)
                             // The idea is we simply lay out the grid, using the enum description for the text
                             // And the integer equivalent as the vote!
-                            var votingModelType = TypeHelpers.Search($"{nameof(VotingModel.ModifiedFibonacci)}Vote");
+                            var votingModelType = GetType().FindOtherInAssembly($"{nameof(VotingModel.ModifiedFibonacci)}Vote");
                             var votingModelValues = Enum.GetValues(votingModelType);
                             for (var i = 0; i < votingModelValues.Length; ++i)
                             {

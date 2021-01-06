@@ -1,16 +1,12 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
-using System.Security.Claims;
-using Flush.Data;
-using Flush.Data.Game;
-using Flush.Data.Game.InMemory;
-using Flush.Data.Identity;
-using Flush.Data.Identity.Model;
-using Flush.Extensions;
-using Flush.Hubs;
-using Flush.Providers;
-using Flush.Utils;
+using Flush.Contracts;
+using Flush.Databases.Entities;
+using Flush.Databases.Identity;
+using Flush.Databases.Application;
+using Flush.Application.Hubs;
+using Flush.Application.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -20,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Logging;
 
 namespace Flush
 {
@@ -48,18 +45,21 @@ namespace Flush
         /// <param name="services">The service collection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
-            var flushDbSection = Configuration.GetSection("FlushDb");
-            var identityDbSection = Configuration.GetSection("IdentityDb");
-            var jwtAuthenticationSection = Configuration.GetSection("JwtAuthentication");
+            var flushDbSection = Configuration.GetSection(Strings.Configuration.FlushDb);
+            var identityDbSection = Configuration.GetSection(Strings.Configuration.IdentityDb);
+            var jwtAuthenticationSection = Configuration.GetSection(Strings.Configuration.JwtAuthentication);
             var jwtSettings = jwtAuthenticationSection.Get<JwtOptions>();
 
             services.Configure<IdentityDatabaseOptions>(identityDbSection)
                 .Configure<JwtOptions>(jwtAuthenticationSection)
                 .Configure<FlushDatabaseOptions>(flushDbSection)
-                .AddDbContext<IdentityContext>()
+                .AddDbContext<IdentityContext>(ServiceLifetime.Singleton)
+                .AddDbContext<ApplicationContext>(ServiceLifetime.Singleton)
                 .AddTransient<AuthenticationProvider>()
-                .AddSingleton<IDataStore2, InMemoryDataStore>()
-                .AddSingleton<UserPurgeProvider>();
+                .AddSingleton<IDataStore2, ApplicationInMemoryDataStore>();
+
+
+            services.AddSingleton<UserPurgeProvider>();
 
             services.AddIdentity<ApplicationUser, ApplicationRole>()
                 .AddEntityFrameworkStores<IdentityContext>()
@@ -76,9 +76,9 @@ namespace Flush
                 options.TokenValidationParameters = new TokenValidationParameters()
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = "Flush",
+                    ValidIssuer = Strings.Configuration.JwtIssuer,
                     ValidateAudience = false,
-                    ValidAudience = "Flush",
+                    ValidAudience = Strings.Configuration.JwtAudience,
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.Default.GetBytes(jwtSettings.Key)),
                     ValidateLifetime = true,
@@ -91,7 +91,7 @@ namespace Flush
                 {
                     OnMessageReceived = (m) =>
                     {
-                        var accessToken = m.Request.Query["access_token"];
+                        var accessToken = m.Request.Query[Strings.Configuration.AccessToken];
 
                         // If the request is for our hub...
                         var path = m.HttpContext.Request.Path;
@@ -135,11 +135,11 @@ namespace Flush
             }
             else
             {
-                app.UseExceptionHandler("/Error");
+                app.UseExceptionHandler(Strings.Configuration.ErrorEndpoint);
                 app.UseHsts();
             }
 
-            app.UsePathBase("/app");
+            app.UsePathBase(Strings.Configuration.ApplicationBaseUri);
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
@@ -153,7 +153,7 @@ namespace Flush
             {
                 endpoints.MapControllers();
                 endpoints.MapRazorPages();
-                endpoints.MapHub<PokerGameHub>("/pokergamehub");
+                endpoints.MapHub<SessionHub>(Strings.Configuration.SessionHubEndpoint);
             });
 
             // We have to request the purge provider at least once, to ensure it

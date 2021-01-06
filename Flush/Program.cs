@@ -1,8 +1,7 @@
 using System;
 using System.Net.Security;
 using System.Security.Authentication;
-using Flush.Data.Identity;
-using Flush.Utils;
+using Flush.Databases.Identity;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -63,7 +62,10 @@ namespace Flush
             Host.CreateDefaultBuilder(args)
                 .ConfigureLogging(logging =>
                 {
-                    if (Helpers.DevelopmentMode)
+                    var isDevelopmentMode = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ==
+                        Environments.Development;
+
+                    if (isDevelopmentMode)
                     {
                         logging.ClearProviders();
                         logging.AddDebug();

@@ -79,7 +79,7 @@ $(document).ready(function () {
 
     /* get a hub connection. */
     const connection = new signalR.HubConnectionBuilder()
-        .withUrl("/app/pokergamehub", { accessTokenFactory: function () { return token } })
+        .withUrl("/app/session", { accessTokenFactory: function () { return token } })
         .withAutomaticReconnect()
         .build();
 

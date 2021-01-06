@@ -2,8 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <SignAssembly>true</SignAssembly>
-    <ReleaseVersion>0.3.4a</ReleaseVersion>
-    <DebugVersion>1.0.0</DebugVersion>
+    <ReleaseVersion>0.1.0</ReleaseVersion>
+    <DebugVersion>0.1.0</DebugVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <LangVersion>latest</LangVersion>
@@ -12,26 +12,23 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Hubs\" />
-    <Folder Include="Hubs\Requests\" />
-    <Folder Include="Hubs\Responses\" />
+    <Folder Include="Application\Hubs\" />
     <Folder Include="Areas\" />
     <Folder Include="Areas\Play\" />
     <Folder Include="Areas\Play\Pages\" />
-    <Folder Include="Data\Identity\" />
-    <Folder Include="Data\Game\" />
-    <Folder Include="Data\Game\Model\" />
-    <Folder Include="Data\Game\EfCore\" />
-    <Folder Include="Data\Identity\Model\" />
-    <Folder Include="Utils\" />
-    <Folder Include="Controllers\" />
+    <Folder Include="Databases\Identity\" />
+    <Folder Include="Databases\Application\" />
     <Folder Include="Areas\Auth\" />
     <Folder Include="Areas\Auth\Pages\" />
-    <Folder Include="Providers\" />
-    <Folder Include="Data\Game\InMemory\" />
     <Folder Include="Extensions\" />
     <Folder Include="Areas\Play\Pages\Partials\" />
     <Folder Include="data-sources\" />
+    <Folder Include="Databases\Identity\Migrations\" />
+    <Folder Include="Databases\Entities\" />
+    <Folder Include="Contracts\" />
+    <Folder Include="Databases\Application\Migrations\" />
+    <Folder Include="Application\" />
+    <Folder Include="Application\Services\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.0" />
