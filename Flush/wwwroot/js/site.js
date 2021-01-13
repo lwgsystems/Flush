@@ -83,6 +83,9 @@ $(document).ready(function () {
         .withAutomaticReconnect()
         .build();
 
+    /* one minute timeout. */
+    connection.serverTimeoutInMilliseconds = 60 * 1000;
+
     /*
      * Configure the connection responses.
      */

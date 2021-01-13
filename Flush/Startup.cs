@@ -118,7 +118,7 @@ namespace Flush
             services.AddSignalR(options =>
             {
                 options.EnableDetailedErrors = true;
-                options.KeepAliveInterval = TimeSpan.FromMinutes(60);
+                options.KeepAliveInterval = TimeSpan.FromSeconds(15);
             });
         }
 
