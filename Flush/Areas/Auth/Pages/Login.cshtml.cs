@@ -78,13 +78,15 @@ namespace Flush.Areas.Auth.Pages
                 var authenticationProvider = (AuthenticationProvider)
                     serviceProvider.GetService(typeof(AuthenticationProvider));
 
+                // TODO: This is fragile. Make stronger in Elderberry.
+                var userNameEscaped = InputName.Replace(" ", "+");
                 var inputRoomLowercased = InputRoom.ToLowerInvariant();
-                var useridentity = $"{InputName}@{inputRoomLowercased}";
+                var email = $"{InputName.ToLowerInvariant().Replace(" ", "")}@{inputRoomLowercased}";
 
                 var result = await authenticationProvider.Register(new UserDetails()
                 {
-                    Username = useridentity,
-                    Email = useridentity,
+                    Username = userNameEscaped,
+                    Email = email,
                 });
                 if (!result.Succeeded)
                 {
@@ -94,7 +96,7 @@ namespace Flush.Areas.Auth.Pages
 
                 var token = await authenticationProvider.Login(new LoginCredentials()
                 {
-                    Email = useridentity,
+                    Email = email,
                 });
                 if (token is null)
                 {

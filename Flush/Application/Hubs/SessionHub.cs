@@ -23,9 +23,9 @@ namespace Flush.Application.Hubs
         private readonly IDataStore2 dataStore2;
 
         private string Player =>
-            Context.User.FindFirst(ClaimTypes.NameIdentifier)?.GetFlushUsername();
+            Context.User.FindFirst("Name")?.Value;
         private string Room =>
-            Context.User.FindFirst(ClaimTypes.NameIdentifier)?.GetFlushRoom();
+            Context.User.FindFirst("Room")?.Value;
         private string PlayerID =>
             Context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 

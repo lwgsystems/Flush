@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -67,7 +68,12 @@ namespace Flush.Application.Services
         public async Task<IdentityResult> Register(UserDetails userDetails)
         {
             _logger.LogDebug($"Registering {userDetails}");
-            var identityUser = new ApplicationUser() { UserName = userDetails.Username, Email = userDetails.Email };
+            var identityUser = new ApplicationUser()
+            {
+                
+                UserName = userDetails.Username,
+                Email = userDetails.Email
+            };
             return await _userManager.CreateAsync(identityUser, userDetails.Password);
         }
 
@@ -152,9 +158,10 @@ namespace Flush.Application.Services
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, identityUser.UserName),
-                    new Claim(ClaimTypes.Email, identityUser.Email),
-                    new Claim(ClaimTypes.NameIdentifier, identityUser.Email.Replace('@','_'))
+                    // TODO: This is fragile. Make stronger in Elderberry.
+                    new Claim(ClaimTypes.NameIdentifier, identityUser.Id),
+                    new Claim("Name", identityUser.UserName.Replace("+", " ")),
+                    new Claim("Room", identityUser.Email.Split("@").Last())
                 }),
 
                 Expires = DateTime.UtcNow.AddSeconds(3600),
