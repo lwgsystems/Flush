@@ -104,7 +104,7 @@ namespace Flush.Application.Services
         {
             _logger.LogDebug("user is logging out of the application");
 
-            var findResult = await _userManager.FindByEmailAsync(user.Replace('_', '@'));
+            var findResult = await _userManager.FindByIdAsync(user);
             if (findResult is null)
             {
                 _logger.LogDebug("The user doesn't exist");
