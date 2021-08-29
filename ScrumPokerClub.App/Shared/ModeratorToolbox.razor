@@ -1,0 +1,31 @@
+﻿@inject ISessionManagementService sessionManagementService
+
+@using ScrumPokerClub.Services.Requests
+
+<div class="row">
+    <div class="col text-center">
+        <button type="button" id="revealVote" class="btn btn-lg btn-outline-success moderator-only" @onclick="RevealVotes">Reveal!</button>
+        <button type="button" id="revealVote" class="btn btn-lg btn-outline-success moderator-only" @onclick="PlayAgain">Play Again?</button>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public string Session { get; set; }
+
+    void RevealVotes()
+    {
+        sessionManagementService.TransitionToResultsPhaseAsync(new TransitionToResultsPhaseRequest()
+        {
+            Session = Session
+        });
+    }
+
+    void PlayAgain()
+    {
+        sessionManagementService.TransitionToPlayPhaseAsync(new TransitionToPlayPhaseRequest()
+        {
+            Session = Session
+        });
+    }
+}

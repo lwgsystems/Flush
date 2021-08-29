@@ -1,0 +1,121 @@
+﻿@implements IDisposable
+
+@inject ISessionManagementService sessionManagementService
+@using ScrumPokerClub.Services.Responses
+@using ScrumPokerClub.Services.Requests 
+
+<div class="row mb-4">
+    <RadzenChart>
+        <RadzenDonutSeries Data="@votes" CategoryProperty="Size" ValueProperty="Count">
+        </RadzenDonutSeries>
+    </RadzenChart>
+</div>
+<div class="row mb-4">
+    <div class="col card-group">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-text text-center text-muted display-4" id="min-card">@min</h1>
+            </div>
+            <div class="card-footer">
+                <h6 class="text-center text-muted">Min</h6>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-text text-center text-muted display-4" id="mode-card">@mode</h1>
+            </div>
+            <div class="card-footer">
+                <h6 class="text-center text-muted">Mode</h6>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-text text-center text-muted display-4" id="max-card">@max</h1>
+            </div>
+            <div class="card-footer">
+                <h6 class="text-center text-muted">Max</h6>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-text text-center text-muted display-4" id="votes-card">@totalVotes</h1>
+            </div>
+            <div class="card-footer">
+                <h6 class="text-center text-muted">Vote(s)</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public string Session { get; set; }
+
+    string min = "?";
+    string mode = "?";
+    string max = "?";
+    string totalVotes = "?";
+
+    class DataItem
+    {
+        public string Size { get; init; }
+        public int Count { get; init; }
+    }
+
+    IList<DataItem> votes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        votes = new List<DataItem>();
+
+        await sessionManagementService.EnsureSessionConfiguredAsync(new ConfigureSessionRequest()
+        {
+            Session = Session,
+            Configure = session =>
+            {
+                session.TransitionToResults += OnTransitionToResults;
+            }
+        });
+    }
+
+    async void OnTransitionToResults(object sender, TransitionToResultsResponse transitionToResultsResponse)
+    {
+        await Task.CompletedTask;
+        Update(transitionToResultsResponse);
+    }
+
+    internal void Update(TransitionToResultsResponse transitionToResultsResponse)
+    {
+        min = transitionToResultsResponse.Low.HasValue ? $"{transitionToResultsResponse.Low.Value}" : "?";
+        mode = transitionToResultsResponse.Mode.HasValue ? $"{transitionToResultsResponse.Mode.Value}" : "?";
+        max = transitionToResultsResponse.High.HasValue ? $"{transitionToResultsResponse.High.Value}" : "?";
+        totalVotes = $"{transitionToResultsResponse.Votes.Count()}";
+
+        // todo project the votes into groups of count of each
+        votes.Clear();
+        var counts = transitionToResultsResponse.Votes
+            .GroupBy(kvp => kvp.Value);
+
+        foreach (var count in counts)
+        {
+            votes.Add(new DataItem()
+            {
+                Size = $"{count.Key}",
+                Count = count.Count()
+            });
+        }
+    }
+
+    void IDisposable.Dispose()
+    {
+        sessionManagementService.EnsureSessionConfiguredAsync(new ConfigureSessionRequest()
+        {
+            Session = Session,
+            Configure = session =>
+            {
+                session.TransitionToResults -= OnTransitionToResults;
+            }
+        });
+    }
+}

@@ -1,14 +1,14 @@
 version: '3'
 services:
-  flush:
-    container_name: 'flush'
+  spc:
+    container_name: 'scrumpokerclub.app'
     build: .
     ports:
       - 80:5000
       - 443:5001
     volumes:
       # Mount the appsettings file instead of baking it into the image.
-      - ./Flush/appsettings.json:/app/appsettings.json
+      - ./ScrumPokerClub.App/appsettings.json:/app/appsettings.json
       # Mount the databases so that they persist on the host.
       # The host side location can be anywhere.
       - ./data/:/app/data-sources/

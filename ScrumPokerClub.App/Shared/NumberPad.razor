@@ -1,0 +1,44 @@
+﻿@inject ISessionManagementService sessionManagementService
+@using ScrumPokerClub.Extensions
+@using ScrumPokerClub.Services.Requests 
+@using ScrumPokerClub.Data 
+
+    <div class="row justify-content-md-center btn-group-xl mb-4" role="group">
+        @{  // v0.5 elderberry
+
+            // The 'dynamic play mat' has been shelved for v0.5, as the focus is on rebuilding in Blazor.
+            // I'll return to dynamic play mats in v0.6
+            for (var i = 0; i < Values.Length; ++i)
+            {
+                var vote = Values.GetValue(i);
+                <div class="col-sm-3 p-1">
+                    <label class="btn btn-outline-secondary vote py-5 w-100" @onclick="@(e => UpdateVote(vote))">
+                        <input type="radio" name="@vote" style="display:none;" />@(((Enum)vote).Description())
+                    </label>
+                </div>
+            }
+        }
+    </div>
+
+@code {
+    [CascadingParameter]
+    public string Session { get; set; }
+
+    public Array Values { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        Values = Enum.GetValues(typeof(ModifiedFibonacciVote));
+    }
+
+    void UpdateVote(object vote)
+    {
+        sessionManagementService.UpdateVoteAsync(new UpdateVoteRequest()
+        {
+            Session = Session,
+            Vote = $"{(int)vote}"
+        });
+    }
+}

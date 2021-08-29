@@ -1,0 +1,74 @@
+﻿@page "/s/{Session}"
+
+@implements IDisposable
+@inject ISessionManagementService sessionManagementService
+@using ScrumPokerClub.Services.Responses
+@using ScrumPokerClub.Services.Requests
+
+<CascadingValue Value="Session">
+    <div class="row" id="playareamain">
+        <NamePlateList />
+        <div class="justify-content-center col-sm-9">
+            <TabControl ShowTabs="true" @ref="tabControl">
+                <TabPage Title="Voting" @ref="playTab">
+                    <NumberPad />
+                    <ModeratorToolbox />
+                </TabPage>
+                <TabPage Title="Results" @ref="resultsTab">
+                    <ResultsView />
+                    <ModeratorToolbox />
+                </TabPage>
+            </TabControl>
+        </div>
+    </div>
+</CascadingValue>
+
+@code
+{
+    [Parameter]
+    public string Session { get; set; }
+
+    TabControl tabControl;
+    TabPage playTab;
+    TabPage resultsTab;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        await sessionManagementService.EnsureSessionConfiguredAsync(new ConfigureSessionRequest()
+        {
+            Session = Session,
+            Configure = session =>
+            {
+                session.TransitionToResults += OnTransitionToResults;
+                session.TransitionToPlay += OnTransitionToPlay;
+            }
+        });
+    }
+
+    async void OnTransitionToResults(object sender, TransitionToResultsResponse transitionToResultsResponse)
+    {
+        await Task.CompletedTask;
+        tabControl.ActivatePage(resultsTab);
+    }
+
+    async void OnTransitionToPlay(object sender, TransitionToPlayResponse transitionToPlayResponse)
+    {
+        await Task.CompletedTask;
+        tabControl.ActivatePage(playTab);
+    }
+
+    void IDisposable.Dispose()
+    {
+        sessionManagementService.EnsureSessionConfiguredAsync(new ConfigureSessionRequest()
+        {
+            Session = Session,
+            Configure = session =>
+            {
+                session.TransitionToResults -= OnTransitionToResults;
+                session.TransitionToPlay -= OnTransitionToPlay;
+            }
+        });
+    }
+}
