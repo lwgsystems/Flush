@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ScrumPokerClub.Core\ScrumPokerClub.Core.csproj" />
+    <ProjectReference Include="..\Snowflake.Core\Snowflake.Core\Snowflake.Core.csproj" />
   </ItemGroup>
 
 </Project>

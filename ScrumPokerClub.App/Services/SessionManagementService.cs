@@ -57,7 +57,7 @@ namespace ScrumPokerClub.Services
             if (!sessions.TryGetValue(configureSessionRequest.Session, out ISession session))
                 session = new Session();
 
-            configureSessionRequest?.Configure(session);
+            configureSessionRequest.Configure?.Invoke(session);
 
             sessions[configureSessionRequest.Session] = session;
         }
@@ -82,16 +82,12 @@ namespace ScrumPokerClub.Services
             else
                 dataStore2.SetConnectionState(userInfo.Identifier, true);
 
-            // TODO construct game state and provide downstream to newly connected player.
-            // May be the case that player manually requests this in Blazor-land.
-
-            var seed = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            var r = new Random(seed);
+            var player = dataStore2.GetPlayerState(userInfo.Identifier);
             await session.RaisePlayerConnectedAsync(new PlayerConnectedResponse()
             {
                 Id = userInfo.Identifier,
                 Name = userInfo.Name,
-                AvatarId = r.Next(1, 20)
+                AvatarId = player.AvatarId
             });
 
             sessions[joinSessionRequest.Session] = session;
@@ -102,10 +98,19 @@ namespace ScrumPokerClub.Services
         /// </summary>
         /// <param name="sessionStateRequest"></param>
         /// <returns></returns>
-        public Task<SessionStateResponse> GetSessionStateAsync(SessionStateRequest sessionStateRequest)
+        public async Task<SessionStateResponse> GetSessionStateAsync(SessionStateRequest sessionStateRequest)
         {
-            // todo get the session state
-            throw new NotImplementedException();
+            if (!sessions.TryGetValue(sessionStateRequest.Session, out ISession session))
+                return default(SessionStateResponse);
+
+            var players = dataStore2.PlayersIn(sessionStateRequest.Session);
+            var phase = dataStore2.GetGamePhase(sessionStateRequest.Session);
+
+            return await Task.FromResult(new SessionStateResponse()
+            {
+                GamePhase = phase,
+                Players = players
+            });
         }
 
         /// <inheritdoc/>
@@ -115,11 +120,15 @@ namespace ScrumPokerClub.Services
             if (!sessions.TryGetValue(leaveSessionRequest.Session, out ISession session))
                 return;
 
-            leaveSessionRequest.PredisconnectAction?.Invoke(session);
-            session.Decrement();
-
             using var scope = serviceProvider.CreateScope();
             var userInfo = scope.ServiceProvider.GetRequiredService<IUserInfoService>();
+
+            // FIX blazor tries to leave early...
+            if (dataStore2.GetPlayerState(userInfo.Identifier) is null)
+                return;
+
+            leaveSessionRequest.PredisconnectAction?.Invoke(session);
+            session.Decrement();
 
             dataStore2.SetConnectionState(userInfo.Identifier, false);
 
@@ -136,7 +145,12 @@ namespace ScrumPokerClub.Services
             if (!sessions.TryGetValue(transitionToPlayPhaseRequest.Session, out ISession session))
                 return;
 
-            // todo check player can transition
+            using var scope = serviceProvider.CreateScope();
+            var userInfo = scope.ServiceProvider.GetRequiredService<IUserInfoService>();
+
+            var player = dataStore2.GetPlayerState(userInfo.Identifier);
+            if (!player.IsModerator)
+                return;
 
             var gamePhase = dataStore2.GetGamePhase(transitionToPlayPhaseRequest.Session);
             if (gamePhase != GamePhase.Results)
@@ -160,7 +174,12 @@ namespace ScrumPokerClub.Services
             if (!sessions.TryGetValue(transitionToResultsPhaseRequest.Session, out ISession session))
                 return;
 
-            // todo check player can transition
+            using var scope = serviceProvider.CreateScope();
+            var userInfo = scope.ServiceProvider.GetRequiredService<IUserInfoService>();
+
+            var player = dataStore2.GetPlayerState(userInfo.Identifier);
+            if (!player.IsModerator)
+                return;
 
             var gamePhase = dataStore2.GetGamePhase(transitionToResultsPhaseRequest.Session);
             if (gamePhase != GamePhase.Voting)
@@ -171,7 +190,7 @@ namespace ScrumPokerClub.Services
             {
                 Votes = dataStore2
                     .PlayersIn(transitionToResultsPhaseRequest.Session)
-                    // todo where p is not observer
+                    .Where(ps => !ps.IsObserver)
                     .Where(ps => ps.Vote.HasValue)
                     .Select(ps => new KeyValuePair<string,int>(ps.PlayerId, ps.Vote.Value))
             });
@@ -187,15 +206,17 @@ namespace ScrumPokerClub.Services
             var userInfo = scope.ServiceProvider.GetRequiredService<IUserInfoService>();
 
             var player = dataStore2.GetPlayerState(userInfo.Identifier);
-            var observer = player.IsObserver; // todo set observer according to update
-            var moderator = player.IsModerator; // todo set moderator according to update;
+            var observer = updateParticipantRequest.IsObserver ?? player.IsObserver;
+            var moderator = updateParticipantRequest.IsModerator ?? player.IsModerator;
 
             dataStore2.SetIsObserver(userInfo.Identifier, observer);
             dataStore2.SetIsModerator(userInfo.Identifier, moderator);
 
             await session.RaisePlayerUpdatedAsync(new PlayerUpdatedResponse()
             {
-                // todo id, changes
+                Id = userInfo.Identifier,
+                IsObserver = observer,
+                IsModerator = moderator
             });
         }
 

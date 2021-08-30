@@ -5,7 +5,10 @@ using System.Threading.Tasks;
 
 namespace ScrumPokerClub.Services.Responses
 {
-    public class PlayerUpdatedResponse
+    class PlayerUpdatedResponse
     {
+        public string Id { get; init; }
+        public bool IsModerator { get; init; }
+        public bool IsObserver { get; init; }
     }
 }

@@ -2,18 +2,18 @@
 @using System.Diagnostics
 @using System.IO
 
-<div>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-toggleable-sm navbar-dark bg-dark border-bottom box-shadow mb-3">
-            <div class="container" id="navbararea">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">ScrumPokerClub</a>
-                <LoginDisplay />
+    <main role="main" class="h-100 pb-5">
+        <div class="container h-100 pb-5">
+            <div class="d-flex align-items-center justify-content-center h-100">
+                <div class="d-flex flex-column">
+                    <div class="align-self-center p-2">
+                        <iframe width="560" height="315" src="https://www.youtube.com/embed/ihyjXd2C-E8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                    <div class="align-self-center p-2 h4">
+                        @Body
+                    </div>
+                </div>
             </div>
-        </nav>
-    </header>
-    <main role="main" class="pb-3">
-        <div class="container">
-            @Body
         </div>
     </main>
 
@@ -32,4 +32,3 @@
             </div>
         </div>
     </footer>
-</div>

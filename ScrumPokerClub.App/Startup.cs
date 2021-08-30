@@ -8,6 +8,7 @@ using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using ScrumPokerClub.Services;
 using ScrumPokerClub.Data;
+using Snowflake.Core;
 
 namespace ScrumPokerClub
 {
@@ -43,7 +44,11 @@ namespace ScrumPokerClub
                 .AddHttpContextAccessor()
                 .AddScoped<IUserInfoService, UserInfoService>()
                 .AddSingleton<ISessionManagementService, SessionManagementService>()
-                .AddSingleton<IDataStore2, ApplicationInMemoryDataStore>();
+                .AddSingleton<IDataStore2, ApplicationInMemoryDataStore>()
+                .AddSingleton<ISnowflakeProvider>(s =>
+                {
+                    return ActivatorUtilities.CreateInstance<SnowflakeProvider>(s, 0u, 0u);
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

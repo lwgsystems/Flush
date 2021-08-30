@@ -4,14 +4,27 @@
 
 <div class="row">
     <div class="col text-center">
-        <button type="button" id="revealVote" class="btn btn-lg btn-outline-success moderator-only" @onclick="RevealVotes">Reveal!</button>
-        <button type="button" id="revealVote" class="btn btn-lg btn-outline-success moderator-only" @onclick="PlayAgain">Play Again?</button>
+        @if (EnableVotingTools)
+        {
+            <button type="button" id="revealVote" class="btn btn-lg btn-outline-success moderator-only" @onclick="RevealVotes">Reveal!</button>
+        }
+
+        @if (EnableResultsTools)
+        {
+            <button type="button" id="revealVote" class="btn btn-lg btn-outline-success moderator-only" @onclick="PlayAgain">Play Again?</button>
+        }
     </div>
 </div>
 
 @code {
     [CascadingParameter]
     public string Session { get; set; }
+
+    [Parameter]
+    public bool EnableVotingTools { get; set; } = false;
+
+    [Parameter]
+    public bool EnableResultsTools { get; set; } = false;
 
     void RevealVotes()
     {

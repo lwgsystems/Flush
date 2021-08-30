@@ -1,5 +1,4 @@
-﻿@implements IDisposable
-@inject ISessionManagementService sessionManagementService
+﻿@inject ISessionManagementService sessionManagementService
 @using ScrumPokerClub.Services.Responses
 @using ScrumPokerClub.Services.Requests 
 
@@ -31,32 +30,15 @@
     {
         await base.OnInitializedAsync();
         namePlatesDto = new List<NamePlateDto>();
-
-        await sessionManagementService.EnsureSessionConfiguredAsync(new ConfigureSessionRequest()
-        {
-            Session = Session,
-            Configure = session =>
-            {
-                session.PlayerConnected += OnPlayerConnected;
-                session.PlayerDisconnected += OnPlayerDisconnected;
-                session.VoteUpdated += OnVoteUpdated;
-            }
-        });
-
-        await sessionManagementService.JoinSessionAsync(new JoinSessionRequest()
-        {
-            Session = Session
-        });
     }
 
     // called when a player connects
-    private async void OnPlayerConnected(object sender, PlayerConnectedResponse playerConnectedResponse)
+    internal async Task OnPlayerConnected(object sender, PlayerConnectedResponse playerConnectedResponse)
     {
         // bail early if there's already a nameplate for the connected player
         if (namePlatesDto.Any(npdto => npdto.Id == playerConnectedResponse.Id))
             return;
 
-        await Task.CompletedTask;
         var newNamePlateDto = new NamePlateDto()
         {
             Id = playerConnectedResponse.Id,
@@ -70,47 +52,40 @@
     }
 
     // called when a player disconnects
-    private async void OnPlayerDisconnected(object sender, PlayerDisconnectedResponse playerDisconnectedResponse)
+    internal async Task OnPlayerDisconnected(object sender, PlayerDisconnectedResponse playerDisconnectedResponse)
     {
         var namePlateDto = namePlatesDto.FirstOrDefault(npdto => npdto.Id == playerDisconnectedResponse.Id);
         if (namePlateDto is null)
             return;
 
-        await Task.CompletedTask;
         namePlatesDto.Remove(namePlateDto);
 
         await InvokeAsync(() => StateHasChanged());
     }
 
     /// called when a vote is updated.
-    private async void OnVoteUpdated(object sender, VoteUpdatedResponse voteUpdatedResponse)
+    internal async Task OnVoteUpdated(object sender, VoteUpdatedResponse voteUpdatedResponse)
     {
         var namePlateDto = namePlatesDto.FirstOrDefault(npdto => npdto.Id == voteUpdatedResponse.Id);
         if (namePlateDto is null)
             return;
 
-        await Task.CompletedTask;
         namePlateDto.HasVoted = true;
 
         await InvokeAsync(() => StateHasChanged());
     }
 
-    void IDisposable.Dispose()
+    internal async Task OnTransitionToPlay(object _, TransitionToPlayResponse transitionToPlayResponse)
     {
-        sessionManagementService.EnsureSessionConfiguredAsync(new ConfigureSessionRequest()
-        {
-            Session = Session,
-            Configure = session =>
-            {
-                session.PlayerConnected -= OnPlayerConnected;
-                session.PlayerDisconnected -= OnPlayerDisconnected;
-                session.VoteUpdated -= OnVoteUpdated;
-            }
-        });
+        foreach (var namePlateDto in namePlatesDto)
+            namePlateDto.HasVoted = false;
 
-        sessionManagementService.LeaveSessionAsync(new LeaveSessionRequest()
-        {
-            Session = Session
-        });
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    internal async Task OnTransitionToResults(object _, TransitionToResultsResponse __)
+    {
+        await Task.CompletedTask;
+        // todo render votes
     }
 }

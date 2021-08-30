@@ -1,8 +1,7 @@
-﻿@implements IDisposable
-
-@inject ISessionManagementService sessionManagementService
+﻿@inject ISessionManagementService sessionManagementService
 @using ScrumPokerClub.Services.Responses
-@using ScrumPokerClub.Services.Requests 
+@using ScrumPokerClub.Extensions
+@using ScrumPokerClub.Data 
 
 <div class="row mb-4">
     <RadzenChart>
@@ -51,10 +50,10 @@
     [CascadingParameter]
     public string Session { get; set; }
 
-    string min = "?";
-    string mode = "?";
-    string max = "?";
-    string totalVotes = "?";
+    string min { get; set; } = "?";
+    string mode { get; set; } = "?";
+    string max { get; set; } = "?";
+    string totalVotes { get; set; } = "?";
 
     class DataItem
     {
@@ -62,37 +61,22 @@
         public int Count { get; init; }
     }
 
-    IList<DataItem> votes;
+    IList<DataItem> votes { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         votes = new List<DataItem>();
-
-        await sessionManagementService.EnsureSessionConfiguredAsync(new ConfigureSessionRequest()
-        {
-            Session = Session,
-            Configure = session =>
-            {
-                session.TransitionToResults += OnTransitionToResults;
-            }
-        });
     }
 
-    async void OnTransitionToResults(object sender, TransitionToResultsResponse transitionToResultsResponse)
+    internal async Task OnTransitionToResults(object sender, TransitionToResultsResponse transitionToResultsResponse)
     {
-        await Task.CompletedTask;
-        Update(transitionToResultsResponse);
-    }
-
-    internal void Update(TransitionToResultsResponse transitionToResultsResponse)
-    {
-        min = transitionToResultsResponse.Low.HasValue ? $"{transitionToResultsResponse.Low.Value}" : "?";
-        mode = transitionToResultsResponse.Mode.HasValue ? $"{transitionToResultsResponse.Mode.Value}" : "?";
-        max = transitionToResultsResponse.High.HasValue ? $"{transitionToResultsResponse.High.Value}" : "?";
+        // todo this shouldn't be tied to a specific voting model
+        min = transitionToResultsResponse.Low.HasValue ? $"{((ModifiedFibonacciVote)transitionToResultsResponse.Low.Value).Description()}" : "?";
+        mode = transitionToResultsResponse.Mode.HasValue ? $"{((ModifiedFibonacciVote)transitionToResultsResponse.Mode.Value).Description()}" : "?";
+        max = transitionToResultsResponse.High.HasValue ? $"{((ModifiedFibonacciVote)transitionToResultsResponse.High.Value).Description()}" : "?";
         totalVotes = $"{transitionToResultsResponse.Votes.Count()}";
 
-        // todo project the votes into groups of count of each
         votes.Clear();
         var counts = transitionToResultsResponse.Votes
             .GroupBy(kvp => kvp.Value);
@@ -101,21 +85,11 @@
         {
             votes.Add(new DataItem()
             {
-                Size = $"{count.Key}",
+                Size = ((ModifiedFibonacciVote)count.Key).Description(),
                 Count = count.Count()
             });
         }
-    }
 
-    void IDisposable.Dispose()
-    {
-        sessionManagementService.EnsureSessionConfiguredAsync(new ConfigureSessionRequest()
-        {
-            Session = Session,
-            Configure = session =>
-            {
-                session.TransitionToResults -= OnTransitionToResults;
-            }
-        });
+        await InvokeAsync(() => StateHasChanged());
     }
 }

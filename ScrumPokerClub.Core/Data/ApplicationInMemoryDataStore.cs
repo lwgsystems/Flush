@@ -32,7 +32,9 @@ namespace ScrumPokerClub.Data
                     Name = name,
                     PlayerId = player,
                     AvatarId = random.Next(1, 20),
-                    Group = group
+                    Group = group,
+                    // HACK: need 
+                    IsModerator = true
                 });
         }
 

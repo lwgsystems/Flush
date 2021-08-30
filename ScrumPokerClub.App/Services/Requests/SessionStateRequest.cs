@@ -5,7 +5,8 @@ using System.Threading.Tasks;
 
 namespace ScrumPokerClub.Services.Requests
 {
-    public class SessionStateRequest
+     class SessionStateRequest
     {
+        public string Session { get; init; }
     }
 }

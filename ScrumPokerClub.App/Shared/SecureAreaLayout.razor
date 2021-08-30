@@ -1,0 +1,54 @@
+﻿@inherits LayoutComponentBase
+@using System.Diagnostics
+@using System.IO
+
+<div>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-toggleable-sm navbar-dark bg-dark border-bottom box-shadow mb-3">
+            <div class="container" id="navbararea">
+                <a class="navbar-brand" asp-area="" asp-page="/Index">ScrumPokerClub</a>
+                <LoginDisplay />
+                <form class="form-inline">
+                    <div class="btn-group ml-2">
+                        <span data-toggle="modal" data-target="#gameInfoModalLong">
+                            <button class="btn btn-outline-secondary" type="button" id="getInfoButton" data-toggle="tooltip" data-placement="bottom" title="How to Play">
+                                <i class="far fa-question-circle"></i>
+                            </button>
+                        </span>
+                    </div>
+                    <div class="btn-group btn-group-toggle ml-2" data-toggle="buttons">
+                        <label class="btn btn-outline-secondary" data-toggle="tooltip" data-placement="bottom" title="I'm a Moderator">
+                            <input type="checkbox" id="playerIsModerator"><i class="fas fa-user-shield"></i>
+                        </label>
+                        <label class="btn btn-outline-secondary" data-toggle="tooltip" data-placement="bottom" title="I'm an Observer">
+                            <input type="checkbox" id="playerIsObserver"><i class="fas fa-binoculars"></i>
+                        </label>
+                    </div>
+                    <div class="btn-group ml-2">
+                        <button class="btn btn-outline-danger" type="button" id="leaveRoomButton" data-toggle="tooltip" data-placement="bottom" title="Leave the Room" disabled>
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </nav>
+    </header>
+    <main role="main" class="pb-3">
+        <div class="container">
+            @Body
+        </div>
+    </main>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 text-left">
+                    &copy; 2020 - <a href="https://www.linkedin.com/in/championofgoats/">Leif Walker-Grant</a>
+                </div>
+                <div class="col-md-6 text-right">
+                    SPC @String.Format("v{0}", FileVersionInfo.GetVersionInfo(typeof(ScrumPokerClub.Program).Assembly.Location).ProductVersion), built on @File.GetCreationTime(typeof(ScrumPokerClub.Program).Assembly.Location).ToUniversalTime()
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
