@@ -11,7 +11,6 @@ namespace ScrumPokerClub.Data
         IEnumerable<PlayerState> PlayersIn(string game);
         void RemovePlayer(string player);
         void SetGamePhase(string game, GamePhase phase);
-        void SetIsObserver(string player, bool isObserver);
         void SetVote(string player, int? vote);
     }
 }

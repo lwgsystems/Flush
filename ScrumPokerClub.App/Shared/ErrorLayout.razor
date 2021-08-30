@@ -1,34 +1,35 @@
 ﻿@inherits LayoutComponentBase
-@using System.Diagnostics
-@using System.IO
 
-    <main role="main" class="h-100 pb-5">
-        <div class="container h-100 pb-5">
-            <div class="d-flex align-items-center justify-content-center h-100">
-                <div class="d-flex flex-column">
-                    <div class="align-self-center p-2">
-                        <iframe width="560" height="315" src="https://www.youtube.com/embed/ihyjXd2C-E8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                    </div>
-                    <div class="align-self-center p-2 h4">
-                        @Body
-                    </div>
+<main role="main" class="h-100 pb-5">
+    <div class="container h-100 pb-5">
+        <div class="d-flex align-items-center justify-content-center h-100">
+            <div class="d-flex flex-column">
+                <div class="align-self-center p-2">
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/ihyjXd2C-E8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+                <div class="align-self-center p-2 h4">
+                    @Body
                 </div>
             </div>
         </div>
-    </main>
+    </div>
+</main>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4 text-left">
-                    &copy; 2020-2021 - <a href="https://www.linkedin.com/in/championofgoats/">Leif Walker-Grant</a>
-                </div>
-                <div class="col-md-4 text-center">
-                    Fork me on <a href="https://github.com/lwgsystems/scrumpokerclub">GitHub</a>
-                </div>
-                <div class="col-md-4 text-right">
-                    Questions? <a href="mailto:hello@lwg.systems">Drop me a line</a>
-                </div>
+<footer class="border-top footer text-muted">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 text-left">
+                &copy; 2020-2021 - <a href="https://www.linkedin.com/in/championofgoats/">Leif Walker-Grant</a>
+            </div>
+            <div class="col-md-4 text-center">
+                Fork me on <a href="https://github.com/lwgsystems/scrumpokerclub">GitHub</a>
+            </div>
+            <div class="col-md-4 text-right">
+                Questions? <a href="mailto:hello@lwg.systems">Drop me a line</a>
+            </div>
+            <div class="col-md-12 text-center">
+                SPC @String.Format("v{0}", Program.FriendlyVersion), built on @Program.BuildDateTime
             </div>
         </div>
-    </footer>
+    </div>
+</footer>

@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace ScrumPokerClub.Services.Responses
+﻿namespace ScrumPokerClub.Services.Responses
 {
-    public class TransitionToPlayResponse
+    /// <summary>
+    /// Results to play event response context.
+    /// </summary>
+    class TransitionToPlayResponse
     {
     }
 }

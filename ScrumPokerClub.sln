@@ -5,11 +5,11 @@ VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScrumPokerClub.App", "ScrumPokerClub.App\ScrumPokerClub.App.csproj", "{CCB0BDBB-A13A-4DB2-A878-C74B6A3462A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScrumPokerClub.Core", "ScrumPokerClub.Core\ScrumPokerClub.Core.csproj", "{125DC19C-E80E-4281-80D8-84B5AC199686}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScrumPokerClub.Core", "ScrumPokerClub.Core\ScrumPokerClub.Core.csproj", "{125DC19C-E80E-4281-80D8-84B5AC199686}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Snowflake.Core", "Snowflake.Core", "{640B2E43-EAC8-4024-B27E-66B8006E994B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snowflake.Core", "Snowflake.Core\Snowflake.Core\Snowflake.Core.csproj", "{266F3CD3-18AE-433D-80DC-00945C5247F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Snowflake.Core", "Snowflake.Core\Snowflake.Core\Snowflake.Core.csproj", "{266F3CD3-18AE-433D-80DC-00945C5247F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -61,10 +61,10 @@ Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {391A6E24-AA45-4067-A11E-F5C44C059A03}
-	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{266F3CD3-18AE-433D-80DC-00945C5247F9} = {640B2E43-EAC8-4024-B27E-66B8006E994B}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {391A6E24-AA45-4067-A11E-F5C44C059A03}
 	EndGlobalSection
 EndGlobal

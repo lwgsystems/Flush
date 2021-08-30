@@ -1,5 +1,15 @@
-﻿<div class="mx-2 mt-2 mb-3 d-flex flex-row" id="@Id">
-    <div class="player-icon @hasVoted" id="status-@Id" data-avatar="@AvatarId"></div>
+﻿@inject TooltipService tooltipService
+@inject IUserInfoService userInfoService
+
+<div class="mx-2 mt-2 mb-3 d-flex flex-row" id="@Id">
+    <div class="player-icon @namePlateVoteClasses"
+         id="status-@Id"
+         data-vote="@Vote"
+         data-avatar="@AvatarId"
+         @ref="@avatar"
+         @onmouseover="@(args => ShowTooltip())"
+         @onmouseout="@(args => CloseTooltip())"
+         @onclick="@(async e => await OnClickCallback.InvokeAsync(this))" />
     <div class="ml-3 player-name">@Name</div>
 </div>
 
@@ -14,7 +24,46 @@
     public int AvatarId { get; set; }
 
     [Parameter]
-    public bool HasVoted { get; set; }
+    public string Vote { get; set; }
 
-    private string hasVoted => HasVoted ? "voted" : "";
+    [Parameter]
+    public bool IsModerator { get; set; }
+
+    [Parameter]
+    public EventCallback<NamePlate> OnClickCallback { get; set; }
+
+    ElementReference avatar;
+
+    private string namePlateVoteClasses
+    {
+        get
+        {
+            var classes = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(Vote)) {; }
+            else if (Vote.Equals("SENTINEL")) classes += "voted";
+            else classes += "voted display-vote";
+
+            classes += IsModerator ? " moderator" : string.Empty;
+
+            return classes;
+        }
+    }
+
+    void ShowTooltip(TooltipOptions options = null)
+    {
+        if (userInfoService.Identifier != Id)
+            return;
+
+        var str = IsModerator ? "Click me to stop moderating." : "Click me to start moderating!";
+        tooltipService.Open(avatar, str, options);
+    }
+
+    void CloseTooltip()
+    {
+        if (userInfoService.Identifier != Id)
+            return;
+
+        tooltipService.Close();
+    }
 }

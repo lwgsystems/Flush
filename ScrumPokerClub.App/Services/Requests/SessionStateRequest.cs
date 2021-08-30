@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace ScrumPokerClub.Services.Requests
+﻿namespace ScrumPokerClub.Services.Requests
 {
-     class SessionStateRequest
+    /// <summary>
+    /// Session state request context.
+    /// </summary>
+    class SessionStateRequest
     {
+        /// <summary>
+        /// The session identifier.
+        /// </summary>
         public string Session { get; init; }
     }
 }

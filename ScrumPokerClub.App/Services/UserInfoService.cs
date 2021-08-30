@@ -1,10 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace ScrumPokerClub.Services
 {
@@ -19,6 +16,9 @@ namespace ScrumPokerClub.Services
         /// <inheritdoc/>
         public string Identifier { get; init; }
 
+        /// <inheritdoc/>
+        public string Email { get; init; }
+
         /// <summary>
         /// Initialises an instance of <see cref="UserInfoService"/>.
         /// </summary>
@@ -29,10 +29,13 @@ namespace ScrumPokerClub.Services
             var claims = context.User?.Claims ?? throw new ArgumentNullException(nameof(context.User));
 
             Name = claims.FirstOrDefault(c => c.Type == "name")?.Value ??
-                throw new SecurityException("Microsoft Identity Platform did not provider a NameIdentifier claim.");
+                throw new SecurityException("Microsoft Identity Platform did not provide a NameIdentifier claim.");
 
             Identifier = claims.FirstOrDefault(c => c.Type == "http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value ??
-                throw new SecurityException("Microsoft Identity Platform did not provider an ObjectIdentifier (OID) claim.");
+                throw new SecurityException("Microsoft Identity Platform did not provide an ObjectIdentifier (OID) claim.");
+
+            Email = claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value ??
+                throw new SecurityException("Microsoft Identity Platform did not provide an EmailAddress claim.");
         }
     }
 }

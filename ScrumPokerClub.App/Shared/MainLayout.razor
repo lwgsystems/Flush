@@ -2,16 +2,11 @@
 @using System.Diagnostics
 @using System.IO
 
-<div>
+<div class="toplevel">
     <header>
-        <nav class="navbar navbar-expand-lg navbar-toggleable-sm navbar-dark bg-dark border-bottom box-shadow mb-3">
-            <div class="container" id="navbararea">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">ScrumPokerClub</a>
-                <LoginDisplay />
-            </div>
-        </nav>
+        <NavMenu />
     </header>
-    <main role="main" class="pb-3">
+    <main role="main">
         <div class="container">
             @Body
         </div>
@@ -28,6 +23,9 @@
                 </div>
                 <div class="col-md-4 text-right">
                     Questions? <a href="mailto:hello@lwg.systems">Drop me a line</a>
+                </div>
+                <div class="col-md-12 text-center">
+                    SPC @String.Format("v{0}", Program.FriendlyVersion), built on @Program.BuildDateTime
                 </div>
             </div>
         </div>

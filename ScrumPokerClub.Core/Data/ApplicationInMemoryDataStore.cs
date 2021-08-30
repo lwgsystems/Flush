@@ -84,18 +84,6 @@ namespace ScrumPokerClub.Data
         }
 
         /// <summary>
-        /// Sets the players observer state.
-        /// </summary>
-        /// <param name="player">The player.</param>
-        /// <param name="isObserver">
-        /// A value indicating their observer status.
-        /// </param>
-        public void SetIsObserver(string player, bool isObserver)
-        {
-            _playerState[player].IsObserver = isObserver;
-        }
-
-        /// <summary>
         /// Sets the players moderator state.
         /// </summary>
         /// <param name="player">The player.</param>

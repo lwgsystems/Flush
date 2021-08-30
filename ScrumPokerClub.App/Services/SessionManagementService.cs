@@ -11,38 +11,42 @@ using ScrumPokerClub.Data;
 namespace ScrumPokerClub.Services
 {
     /// <summary>
-    /// 
+    /// Default implementation of Spc session management.
     /// </summary>
     class SessionManagementService : ISessionManagementService
     {
         /// <summary>
-        /// 
+        /// A map of sessions to their names.
         /// </summary>
         private readonly IDictionary<string, ISession> sessions;
 
         /// <summary>
-        /// 
+        /// The logger.
         /// </summary>
         private readonly ILogger logger;
 
         /// <summary>
-        /// 
+        /// The service provider.
         /// </summary>
         private readonly IServiceProvider serviceProvider;
 
         /// <summary>
-        /// 
+        /// The structured data store.
         /// </summary>
         private readonly IDataStore2 dataStore2;
 
         /// <summary>
-        /// 
+        /// Create a new instance of <see cref="SessionManagementService"/>.
         /// </summary>
+        /// <param name="logger">The logger.</param>
+        /// <param name="serviceProvider">The service provider.</param>
+        /// <param name="dataStore2">The structured data store.</param>
         public SessionManagementService(
             ILogger<SessionManagementService> logger,
             IServiceProvider serviceProvider,
             IDataStore2 dataStore2)
         {
+            logger.LogError("this is an initial error");
             this.logger = logger;
             this.serviceProvider = serviceProvider;
             this.dataStore2 = dataStore2;
@@ -93,11 +97,7 @@ namespace ScrumPokerClub.Services
             sessions[joinSessionRequest.Session] = session;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sessionStateRequest"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public async Task<SessionStateResponse> GetSessionStateAsync(SessionStateRequest sessionStateRequest)
         {
             if (!sessions.TryGetValue(sessionStateRequest.Session, out ISession session))
@@ -120,21 +120,16 @@ namespace ScrumPokerClub.Services
             if (!sessions.TryGetValue(leaveSessionRequest.Session, out ISession session))
                 return;
 
-            using var scope = serviceProvider.CreateScope();
-            var userInfo = scope.ServiceProvider.GetRequiredService<IUserInfoService>();
-
-            // FIX blazor tries to leave early...
-            if (dataStore2.GetPlayerState(userInfo.Identifier) is null)
+            if (dataStore2.GetPlayerState(leaveSessionRequest.Id) is null)
                 return;
 
-            leaveSessionRequest.PredisconnectAction?.Invoke(session);
             session.Decrement();
 
-            dataStore2.SetConnectionState(userInfo.Identifier, false);
+            dataStore2.SetConnectionState(leaveSessionRequest.Id, false);
 
             await session.RaisePlayerDisconnectedAsync(new PlayerDisconnectedResponse()
             {
-                Id = userInfo.Identifier,
+                Id = leaveSessionRequest.Id,
             });
         }
 
@@ -186,14 +181,9 @@ namespace ScrumPokerClub.Services
                 return;
 
             dataStore2.SetGamePhase(transitionToResultsPhaseRequest.Session, GamePhase.Results);
-            await session.RaiseTransitionToResultsAsync(new TransitionToResultsResponse()
-            {
-                Votes = dataStore2
-                    .PlayersIn(transitionToResultsPhaseRequest.Session)
-                    .Where(ps => !ps.IsObserver)
-                    .Where(ps => ps.Vote.HasValue)
-                    .Select(ps => new KeyValuePair<string,int>(ps.PlayerId, ps.Vote.Value))
-            });
+            var response = TransitionToResultsResponse.FromPlayerStates(
+                dataStore2.PlayersIn(transitionToResultsPhaseRequest.Session));
+            await session.RaiseTransitionToResultsAsync(response);
         }
 
         /// <inheritdoc/>
@@ -206,16 +196,13 @@ namespace ScrumPokerClub.Services
             var userInfo = scope.ServiceProvider.GetRequiredService<IUserInfoService>();
 
             var player = dataStore2.GetPlayerState(userInfo.Identifier);
-            var observer = updateParticipantRequest.IsObserver ?? player.IsObserver;
             var moderator = updateParticipantRequest.IsModerator ?? player.IsModerator;
 
-            dataStore2.SetIsObserver(userInfo.Identifier, observer);
             dataStore2.SetIsModerator(userInfo.Identifier, moderator);
 
             await session.RaisePlayerUpdatedAsync(new PlayerUpdatedResponse()
             {
                 Id = userInfo.Identifier,
-                IsObserver = observer,
                 IsModerator = moderator
             });
         }
@@ -236,12 +223,6 @@ namespace ScrumPokerClub.Services
             {
                 logger.LogError($"Player '{userInfo.Identifier}' attempted to vote during a non-voting phase of play.");
                 return;
-            }
-
-            if (player.IsObserver)
-            {
-                logger.LogInformation($"Player '{userInfo.Identifier}' attempted to vote, but is an observer." +
-                    $"Their vote has been recorded, but will be ignored when delivering results.");
             }
 
             logger.LogDebug($"In vote is {updateVoteRequest.Vote}.");

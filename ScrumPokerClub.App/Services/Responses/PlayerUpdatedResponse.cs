@@ -1,14 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace ScrumPokerClub.Services.Responses
+﻿namespace ScrumPokerClub.Services.Responses
 {
+    /// <summary>
+    /// Player updated event response context.
+    /// </summary>
     class PlayerUpdatedResponse
     {
+        /// <summary>
+        /// The player id.
+        /// </summary>
         public string Id { get; init; }
+
+        /// <summary>
+        /// True if the player is now a moderator, else false.
+        /// </summary>
         public bool IsModerator { get; init; }
-        public bool IsObserver { get; init; }
     }
 }

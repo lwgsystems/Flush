@@ -1,6 +1,9 @@
 ﻿@inject ISessionManagementService sessionManagementService
+@inject IUserInfoService userInfoService
+
 @using ScrumPokerClub.Services.Responses
-@using ScrumPokerClub.Services.Requests 
+@using ScrumPokerClub.Data
+@using ScrumPokerClub.Extensions 
 
 <div class="justify-content-sm-left col-sm-3" id="playerlist">
     @foreach (var namePlate in namePlatesDto)
@@ -8,7 +11,9 @@
         <NamePlate Id="@namePlate.Id"
                    Name="@namePlate.Name"
                    AvatarId="@namePlate.AvatarId"
-                   HasVoted="@namePlate.HasVoted" />
+                   Vote="@namePlate.Vote"
+                   IsModerator="@namePlate.IsModerator"
+                   OnClickCallback="@OnNamePlateClicked"/>
     }
 </div>
 
@@ -21,7 +26,8 @@
         public string Id { get; set; }
         public string Name { get; set; }
         public int AvatarId { get; set; }
-        public bool HasVoted { get; set; } = false;
+        public string Vote { get; set; }
+        public bool IsModerator { get; set; }
     }
 
     private IList<NamePlateDto> namePlatesDto;
@@ -43,7 +49,8 @@
         {
             Id = playerConnectedResponse.Id,
             Name = playerConnectedResponse.Name,
-            AvatarId = playerConnectedResponse.AvatarId
+            AvatarId = playerConnectedResponse.AvatarId,
+            IsModerator = false
         };
 
         namePlatesDto.Add(newNamePlateDto);
@@ -70,7 +77,7 @@
         if (namePlateDto is null)
             return;
 
-        namePlateDto.HasVoted = true;
+        namePlateDto.Vote = "SENTINEL";
 
         await InvokeAsync(() => StateHasChanged());
     }
@@ -78,14 +85,45 @@
     internal async Task OnTransitionToPlay(object _, TransitionToPlayResponse transitionToPlayResponse)
     {
         foreach (var namePlateDto in namePlatesDto)
-            namePlateDto.HasVoted = false;
+            namePlateDto.Vote = string.Empty;
 
         await InvokeAsync(() => StateHasChanged());
     }
 
-    internal async Task OnTransitionToResults(object _, TransitionToResultsResponse __)
+    internal async Task OnTransitionToResults(object _, TransitionToResultsResponse transitionToResultsResponse)
     {
-        await Task.CompletedTask;
-        // todo render votes
+        foreach (var vote in transitionToResultsResponse.Votes)
+        {
+            var npdto = namePlatesDto.FirstOrDefault(npdto => npdto.Id == vote.Key);
+            if (npdto is null)
+                continue; // shouldn't happen
+
+            npdto.Vote = ((ModifiedFibonacciVote)vote.Value).Description();
+        }
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    internal async Task OnPlayerUpdated(object _, PlayerUpdatedResponse playerUpdatedResponse)
+    {
+        var namePlateDto = namePlatesDto.FirstOrDefault(npdto => npdto.Id == playerUpdatedResponse.Id);
+        if (namePlateDto is null)
+            return;
+
+        namePlateDto.IsModerator = playerUpdatedResponse.IsModerator;
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    internal async Task OnNamePlateClicked(NamePlate namePlate)
+    {
+        if (namePlate.Id != userInfoService.Identifier)
+            return;
+
+        await sessionManagementService.UpdateParticipantAsync(new Services.Requests.UpdateParticipantRequest()
+        {
+            Session = Session,
+            IsModerator = !namePlate.IsModerator
+        });
     }
 }

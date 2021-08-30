@@ -1,4 +1,4 @@
-﻿<div class="btn-group" role="group" style="visibility: @tabVisibility">
+﻿<div class="btn-group" role="group" style="display: @tabVisibility">
     @foreach (var tabPage in tabPages)
     {
         <button type="button"
@@ -21,7 +21,7 @@
     {
         set
         {
-            tabVisibility = value ? "visible" : "hidden";
+            tabVisibility = value ? "block" : "none";
 
             InvokeAsync(() => StateHasChanged());
         }

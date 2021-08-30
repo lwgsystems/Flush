@@ -2,8 +2,11 @@
 
 @implements IDisposable
 @inject ISessionManagementService sessionManagementService
+@inject IUserInfoService userInfoService
+
 @using ScrumPokerClub.Services.Responses
 @using ScrumPokerClub.Services.Requests
+@using ScrumPokerClub.Data 
 
 <CascadingValue Value="Session">
     <div class="row" id="playareamain">
@@ -11,12 +14,12 @@
         <div class="justify-content-center col-sm-9">
             <TabControl ShowTabs="false" @ref="tabControl">
                 <TabPage Title="Voting" @ref="playTab">
-                    <NumberPad />
-                    <ModeratorToolbox EnableVotingTools="true" />
+                    <PokerDeck />
+                    <ModeratorToolbox EnableVotingTools="@ModeratorToolBoxMasterEnable" />
                 </TabPage>
                 <TabPage Title="Results" @ref="resultsTab">
                     <ResultsView @ref="resultsView"/>
-                    <ModeratorToolbox EnableResultsTools="true" />
+                    <ModeratorToolbox EnableResultsTools="@ModeratorToolBoxMasterEnable" />
                 </TabPage>
             </TabControl>
         </div>
@@ -34,6 +37,8 @@
     TabPage resultsTab;
     ResultsView resultsView;
 
+    bool ModeratorToolBoxMasterEnable = false;
+
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -48,19 +53,36 @@
                 session.PlayerConnected += OnPlayerConnected;
                 session.PlayerDisconnected += OnPlayerDisconnected;
                 session.VoteUpdated += OnVoteUpdated;
-                // todo session.PlayerUpdated += OnPlayerUpdated;
+                session.PlayerUpdated += OnPlayerUpdated;
             }
         });
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        await sessionManagementService.JoinSessionAsync(new JoinSessionRequest()
         {
-            await sessionManagementService.JoinSessionAsync(new JoinSessionRequest()
-            {
-                Session = Session
-            });
+            Session = Session
+        });
+
+        var sessionStateResponse = await sessionManagementService.GetSessionStateAsync(new SessionStateRequest()
+        {
+            Session = Session
+        });
+
+        ReconcilePlayers(sessionStateResponse);
+        switch (sessionStateResponse.GamePhase)
+        {
+            case GamePhase.Voting:
+                ReconcileVotingPhase(sessionStateResponse);
+                break;
+
+            case GamePhase.Results:
+                ReconcileResultsPhase(sessionStateResponse);
+                break;
+
+            default:
+                break;
         }
     }
 
@@ -95,9 +117,18 @@
         await namePlateList.OnVoteUpdated(sender, voteUpdatedResponse);
     }
 
+    async void OnPlayerUpdated(object sender, PlayerUpdatedResponse playerUpdatedResponse)
+    {
+        await namePlateList.OnPlayerUpdated(sender, playerUpdatedResponse);
+
+        if (userInfoService.Identifier == playerUpdatedResponse.Id)
+            ModeratorToolBoxMasterEnable = playerUpdatedResponse.IsModerator;
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+
     void IDisposable.Dispose()
     {
-
         sessionManagementService.EnsureSessionConfiguredAsync(new ConfigureSessionRequest()
         {
             Session = Session,
@@ -108,8 +139,42 @@
                 session.PlayerConnected -= OnPlayerConnected;
                 session.PlayerDisconnected -= OnPlayerDisconnected;
                 session.VoteUpdated -= OnVoteUpdated;
-                // todo session.PlayerUpdated -= OnPlayerUpdated;
+                session.PlayerUpdated -= OnPlayerUpdated;
             }
         });
+
+        sessionManagementService.LeaveSessionAsync(new LeaveSessionRequest()
+        {
+            Session = Session,
+            Id = userInfoService.Identifier
+        });
+    }
+
+    void ReconcilePlayers(SessionStateResponse sessionStateResponse)
+    {
+        foreach (var player in sessionStateResponse.Players)
+        {
+            // todo handle a connected player is a moderator (moderatorship isn't handled currently)
+            OnPlayerConnected(this, new PlayerConnectedResponse()
+            {
+                Id = player.PlayerId,
+                Name = player.Name,
+                AvatarId = player.AvatarId
+            });
+        }
+    }
+
+    void ReconcileVotingPhase(SessionStateResponse sessionStateResponse)
+    {
+        foreach (var player in sessionStateResponse.Players)
+        {
+            if (player.Vote is not null)
+                OnVoteUpdated(this, new VoteUpdatedResponse() { Id = player.PlayerId });
+        }
+    }
+
+    void ReconcileResultsPhase(SessionStateResponse sessionStateResponse)
+    {
+        OnTransitionToResults(this, TransitionToResultsResponse.FromPlayerStates(sessionStateResponse.Players));
     }
 }

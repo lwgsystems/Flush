@@ -28,11 +28,6 @@ namespace ScrumPokerClub.Data
         public string Group { get; set; } = null;
 
         /// <summary>
-        /// Get or set a value indicating that this player is an observer.
-        /// </summary>
-        public bool IsObserver { get; set; } = false;
-
-        /// <summary>
         /// Get or set a value indicating that this player is a moderator.
         /// </summary>
         public bool IsModerator { get; set; } = false;

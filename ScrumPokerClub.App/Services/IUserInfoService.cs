@@ -11,6 +11,11 @@
         public string Name { get; }
 
         /// <summary>
+        /// The email address of the user.
+        /// </summary>
+        public string Email { get; }
+
+        /// <summary>
         /// The object identifier of the user.
         /// </summary>
         public string Identifier { get; }

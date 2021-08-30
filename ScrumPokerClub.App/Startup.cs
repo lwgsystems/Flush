@@ -6,23 +6,34 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
-using ScrumPokerClub.Services;
+using Radzen;
 using ScrumPokerClub.Data;
+using ScrumPokerClub.Services;
 using Snowflake.Core;
+using System;
 
 namespace ScrumPokerClub
 {
+    /// <summary>
+    /// Service configuration.
+    /// </summary>
     public class Startup
     {
+        /// <summary>
+        /// Create a new instance of <see cref="Startup"/>.
+        /// </summary>
+        /// <param name="configuration">The configuration.</param>
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
+        /// <summary>
+        /// The configuration.
+        /// </summary>
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+        /// <inheritdoc/>
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
@@ -40,6 +51,8 @@ namespace ScrumPokerClub
             services.AddServerSideBlazor()
                 .AddMicrosoftIdentityConsentHandler();
 
+            services.AddScoped<TooltipService>();
+
             services
                 .AddHttpContextAccessor()
                 .AddScoped<IUserInfoService, UserInfoService>()
@@ -47,11 +60,22 @@ namespace ScrumPokerClub
                 .AddSingleton<IDataStore2, ApplicationInMemoryDataStore>()
                 .AddSingleton<ISnowflakeProvider>(s =>
                 {
-                    return ActivatorUtilities.CreateInstance<SnowflakeProvider>(s, 0u, 0u);
+                    return ActivatorUtilities.CreateInstance<SnowflakeProvider>(s, 1u, 1u);
                 });
+
+            services.AddHsts(options =>
+            {
+                options.Preload = false;
+                options.IncludeSubDomains = true;
+                options.MaxAge = TimeSpan.FromMinutes(30);
+
+                // ensure we exclude a development machine
+                options.ExcludedHosts.Add("localhost");
+                options.ExcludedHosts.Add("127.0.0.1");
+            });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        /// <inheritdoc/>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

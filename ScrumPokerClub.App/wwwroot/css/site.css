@@ -1,5 +1,3 @@
-@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
-
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
@@ -37,6 +35,13 @@ a, .btn-link {
 
 .validation-message {
     color: red;
+}
+
+.section {
+    padding-bottom: 2rem;
+    padding-top: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 
 #blazor-error-ui {
@@ -128,7 +133,16 @@ html {
 
 body {
     /* Margin bottom by footer height */
-    margin-bottom: 60px;
+    margin-bottom: 4rem;
+}
+
+main {
+    padding-bottom: 10rem;
+}
+
+.toplevel {
+    position: relative;
+    min-height: 100%;
 }
 
 .footer {
@@ -136,14 +150,14 @@ body {
     bottom: 0;
     width: 100%;
     white-space: nowrap;
-    line-height: 60px; /* Vertically center the text there */
+    line-height: 4rem; /* Vertically center the text there */
 }
 
 .btn-group-xl {
     flex-wrap: wrap;
 }
 
-    .btn-group-xl * {
+    .btn-group-xl .btn {
         font-size: 3rem;
         line-height: 1.5;
         border-radius: .3rem;
@@ -202,6 +216,8 @@ body {
 
     .player-icon:after,
     .player-icon:before {
+        font-family: "Font Awesome 5 Free";
+        font-weight: 900;
         position: absolute;
         border-radius: .75rem;
         font-size: .75rem;
@@ -225,7 +241,6 @@ body {
         bottom: -.25rem;
         background: var(--voting);
         color: var(--voteTextColor);
-        font-weight: bold;
         transition-property: width, height, right, bottom;
         transition-duration: .1s;
         transition-timing-function: linear;
