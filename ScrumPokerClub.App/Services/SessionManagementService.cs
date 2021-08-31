@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ScrumPokerClub.Data;
+using Snowflake.Core;
 
 namespace ScrumPokerClub.Services
 {
@@ -18,7 +19,7 @@ namespace ScrumPokerClub.Services
         /// <summary>
         /// A map of sessions to their names.
         /// </summary>
-        private readonly IDictionary<string, ISession> sessions;
+        private readonly IDictionary<string, ISessionEvents> sessions;
 
         /// <summary>
         /// The logger.
@@ -31,80 +32,143 @@ namespace ScrumPokerClub.Services
         private readonly IServiceProvider serviceProvider;
 
         /// <summary>
+        /// The snowflake provider.
+        /// </summary>
+        private readonly ISnowflakeProvider snowflakeProvider;
+
+        /// <summary>
         /// The structured data store.
         /// </summary>
-        private readonly IDataStore2 dataStore2;
+        private readonly IDatabase dataStore;
+
+        /// <summary>
+        /// A random instance.
+        /// </summary>
+        private static readonly Random random = new();
 
         /// <summary>
         /// Create a new instance of <see cref="SessionManagementService"/>.
         /// </summary>
         /// <param name="logger">The logger.</param>
         /// <param name="serviceProvider">The service provider.</param>
-        /// <param name="dataStore2">The structured data store.</param>
+        /// <param name="dataStore">The structured data store.</param>
         public SessionManagementService(
             ILogger<SessionManagementService> logger,
             IServiceProvider serviceProvider,
-            IDataStore2 dataStore2)
+            ISnowflakeProvider snowflakeProvider,
+            IDatabase dataStore)
         {
-            logger.LogError("this is an initial error");
             this.logger = logger;
             this.serviceProvider = serviceProvider;
-            this.dataStore2 = dataStore2;
+            this.dataStore = dataStore;
+            this.snowflakeProvider = snowflakeProvider;
 
-            sessions = new Dictionary<string, ISession>();
+            sessions = new Dictionary<string, ISessionEvents>();
         }
 
         /// <inheritdoc/>
         public async Task EnsureSessionConfiguredAsync(ConfigureSessionRequest configureSessionRequest)
         {
-            await Task.CompletedTask;
-            if (!sessions.TryGetValue(configureSessionRequest.Session, out ISession session))
-                session = new Session();
+            using var scope = serviceProvider.CreateScope();
+            var userInfo = scope.ServiceProvider.GetRequiredService<IUserInfoService>();
+
+            if (!sessions.TryGetValue(configureSessionRequest.Session, out ISessionEvents session))
+            {
+                session = new SessionEvents();
+                logger.LogInformation($"Creating event container for session {configureSessionRequest.Session}.");
+            }
 
             configureSessionRequest.Configure?.Invoke(session);
 
             sessions[configureSessionRequest.Session] = session;
+
+            // if no session exists in the back end by this id, then make it.
+            if (await dataStore.GetSessionAsync(configureSessionRequest.Session) is null)
+            {
+                if (!ulong.TryParse(configureSessionRequest.Session, out ulong id))
+                {
+                    id = await snowflakeProvider.GetNextAsync();
+                }
+
+                await dataStore.UpsertSessionAsync(new Data.Entities.Session()
+                {
+                    Id = id,
+                    Name = configureSessionRequest.Session,
+                });
+            }
+
+            // lastly, ensure the context for this session exists.
+            await dataStore.EnsureSessionContextExistsAsync(configureSessionRequest.Session);
         }
 
         /// <inheritdoc/>
         public async Task JoinSessionAsync(JoinSessionRequest joinSessionRequest)
         {
-            await Task.CompletedTask;
-            if (!sessions.TryGetValue(joinSessionRequest.Session, out ISession session))
-                return;
-
-            session.Increment();
-
-            if (!dataStore2.AnyPlayersIn(joinSessionRequest.Session))
-                dataStore2.SetGamePhase(joinSessionRequest.Session, GamePhase.Voting);
-
             using var scope = serviceProvider.CreateScope();
             var userInfo = scope.ServiceProvider.GetRequiredService<IUserInfoService>();
 
-            if (dataStore2.GetPlayerState(userInfo.Identifier) is null)
-                dataStore2.AddPlayer(userInfo.Identifier, userInfo.Name, joinSessionRequest.Session);
-            else
-                dataStore2.SetConnectionState(userInfo.Identifier, true);
+            // bail if no session.
+            if (!sessions.TryGetValue(joinSessionRequest.Session, out ISessionEvents session))
+            {
+                logger.LogError($"Player {userInfo.Identifier} attempted operation on non-existent session.");
+                return;
+            }
 
-            var player = dataStore2.GetPlayerState(userInfo.Identifier);
+            // transition session to voting if we're the first to join.
+            var playersInSession = await dataStore.GetAllPlayerContextsInSessionContextAsync(joinSessionRequest.Session);
+            if (!playersInSession.Any())
+                await dataStore.SetGamePhaseAsync(joinSessionRequest.Session, GamePhase.Voting);
+
+            // pull the player context. if it doesn't exist, pull the profile and create it.
+            Data.Entities.Profile profile;
+            var playerContext = await dataStore.GetPlayerContextAsync(joinSessionRequest.Session, userInfo.Identifier);
+            if (playerContext is null)
+            {
+                // if the profile also doesn't exist, create that too.
+                profile = await dataStore.GetProfileAsync(userInfo.Identifier);
+                if (profile is null)
+                {
+                    profile = new Data.Entities.Profile()
+                    {
+                        Id = userInfo.Identifier,
+                        AvatarId = random.Next(1, 20),
+                    };
+                    await dataStore.UpsertProfileAsync(profile);
+                }
+
+                // create and fetch the player context.
+                await dataStore.AddToSessionContextAsync(joinSessionRequest.Session, profile.Id, userInfo);
+                playerContext = await dataStore.GetPlayerContextAsync(joinSessionRequest.Session, profile.Id);
+            }
+
+            // report to the clients that the player has joined.
             await session.RaisePlayerConnectedAsync(new PlayerConnectedResponse()
             {
-                Id = userInfo.Identifier,
-                Name = userInfo.Name,
-                AvatarId = player.AvatarId
+                Id = playerContext.Profile.Id,
+                Name = playerContext.DisplayName,
+                AvatarId = playerContext.Profile.AvatarId,
+                IsModerator = playerContext.Moderating
             });
 
+            // update the cached session object
             sessions[joinSessionRequest.Session] = session;
         }
 
         /// <inheritdoc/>
         public async Task<SessionStateResponse> GetSessionStateAsync(SessionStateRequest sessionStateRequest)
         {
-            if (!sessions.TryGetValue(sessionStateRequest.Session, out ISession session))
-                return default(SessionStateResponse);
+            using var scope = serviceProvider.CreateScope();
+            var userInfo = scope.ServiceProvider.GetRequiredService<IUserInfoService>();
 
-            var players = dataStore2.PlayersIn(sessionStateRequest.Session);
-            var phase = dataStore2.GetGamePhase(sessionStateRequest.Session);
+            // bail if no session.
+            if (!sessions.TryGetValue(sessionStateRequest.Session, out ISessionEvents _))
+            {
+                logger.LogError($"Player {userInfo.Identifier} attempted operation on non-existent session.");
+                return default;
+            }
+
+            var players = await dataStore.GetAllPlayerContextsInSessionContextAsync(sessionStateRequest.Session);
+            var phase = await dataStore.GetGamePhaseAsync(sessionStateRequest.Session);
 
             return await Task.FromResult(new SessionStateResponse()
             {
@@ -116,17 +180,19 @@ namespace ScrumPokerClub.Services
         /// <inheritdoc/>
         public async Task LeaveSessionAsync(LeaveSessionRequest leaveSessionRequest)
         {
-            await Task.CompletedTask;
-            if (!sessions.TryGetValue(leaveSessionRequest.Session, out ISession session))
+            using var scope = serviceProvider.CreateScope();
+            var userInfo = scope.ServiceProvider.GetRequiredService<IUserInfoService>();
+
+            if (!sessions.TryGetValue(leaveSessionRequest.Session, out ISessionEvents session))
+            {
+                logger.LogError($"Player {userInfo.Identifier} attempted operation on non-existent session.");
+                return;
+            }
+
+            if (await dataStore.GetPlayerContextAsync(leaveSessionRequest.Session, leaveSessionRequest.Id) is null)
                 return;
 
-            if (dataStore2.GetPlayerState(leaveSessionRequest.Id) is null)
-                return;
-
-            session.Decrement();
-
-            dataStore2.SetConnectionState(leaveSessionRequest.Id, false);
-
+            await dataStore.RemoveFromSessionContextAsync(leaveSessionRequest.Session, leaveSessionRequest.Id);
             await session.RaisePlayerDisconnectedAsync(new PlayerDisconnectedResponse()
             {
                 Id = leaveSessionRequest.Id,
@@ -136,26 +202,34 @@ namespace ScrumPokerClub.Services
         /// <inheritdoc/>
         public async Task TransitionToPlayPhaseAsync(TransitionToPlayPhaseRequest transitionToPlayPhaseRequest)
         {
-            await Task.CompletedTask;
-            if (!sessions.TryGetValue(transitionToPlayPhaseRequest.Session, out ISession session))
-                return;
-
             using var scope = serviceProvider.CreateScope();
             var userInfo = scope.ServiceProvider.GetRequiredService<IUserInfoService>();
 
-            var player = dataStore2.GetPlayerState(userInfo.Identifier);
-            if (!player.IsModerator)
+            if (!sessions.TryGetValue(transitionToPlayPhaseRequest.Session, out ISessionEvents session))
+            {
+                logger.LogError($"Player {userInfo.Identifier} attempted operation on non-existent session.");
                 return;
+            }
 
-            var gamePhase = dataStore2.GetGamePhase(transitionToPlayPhaseRequest.Session);
+            var player = await dataStore.GetPlayerContextAsync(transitionToPlayPhaseRequest.Session, userInfo.Identifier);
+            if (!player.Moderating)
+            {
+                logger.LogError($"Non-moderating player '{userInfo.Identifier}' attempted change phase of play.");
+                return;
+            }
+
+            var gamePhase = await dataStore.GetGamePhaseAsync(transitionToPlayPhaseRequest.Session);
             if (gamePhase != GamePhase.Results)
+            {
+                logger.LogError($"Player '{userInfo.Identifier}' attempted a transition to play during non-results phase.");
                 return;
+            }
 
-            var players = dataStore2.PlayersIn(transitionToPlayPhaseRequest.Session);
+            var players = await dataStore.GetAllPlayerContextsInSessionContextAsync(transitionToPlayPhaseRequest.Session);
             foreach (var p in players)
-                dataStore2.SetVote(p.PlayerId, null);
+                await dataStore.SetVoteAsync(transitionToPlayPhaseRequest.Session, p.Profile.Id, null);
 
-            dataStore2.SetGamePhase(transitionToPlayPhaseRequest.Session, GamePhase.Voting);
+            await dataStore.SetGamePhaseAsync(transitionToPlayPhaseRequest.Session, GamePhase.Voting);
             await session.RaiseTransitionToPlayAsync(new TransitionToPlayResponse()
             {
                 // nothing to do
@@ -165,81 +239,103 @@ namespace ScrumPokerClub.Services
         /// <inheritdoc/>
         public async Task TransitionToResultsPhaseAsync(TransitionToResultsPhaseRequest transitionToResultsPhaseRequest)
         {
-            await Task.CompletedTask;
-            if (!sessions.TryGetValue(transitionToResultsPhaseRequest.Session, out ISession session))
-                return;
-
             using var scope = serviceProvider.CreateScope();
             var userInfo = scope.ServiceProvider.GetRequiredService<IUserInfoService>();
 
-            var player = dataStore2.GetPlayerState(userInfo.Identifier);
-            if (!player.IsModerator)
+            if (!sessions.TryGetValue(transitionToResultsPhaseRequest.Session, out ISessionEvents session))
+            {
+                logger.LogError($"Player {userInfo.Identifier} attempted operation on non-existent session.");
                 return;
+            }
 
-            var gamePhase = dataStore2.GetGamePhase(transitionToResultsPhaseRequest.Session);
+            var player = await dataStore.GetPlayerContextAsync(transitionToResultsPhaseRequest.Session, userInfo.Identifier);
+            if (!player.Moderating)
+            {
+                logger.LogError($"Non-moderating player {userInfo.Identifier} attempted change phase of play.");
+                return;
+            }
+
+            var gamePhase = await dataStore.GetGamePhaseAsync(transitionToResultsPhaseRequest.Session);
             if (gamePhase != GamePhase.Voting)
+            {
+                logger.LogError($"Player {userInfo.Identifier} attempted a transition to results during non-voting phase.");
                 return;
+            }
 
-            dataStore2.SetGamePhase(transitionToResultsPhaseRequest.Session, GamePhase.Results);
+            await dataStore.SetGamePhaseAsync(transitionToResultsPhaseRequest.Session, GamePhase.Results);
             var response = TransitionToResultsResponse.FromPlayerStates(
-                dataStore2.PlayersIn(transitionToResultsPhaseRequest.Session));
+                await dataStore.GetAllPlayerContextsInSessionContextAsync(transitionToResultsPhaseRequest.Session));
+
             await session.RaiseTransitionToResultsAsync(response);
         }
 
         /// <inheritdoc/>
         public async Task UpdateParticipantAsync(UpdateParticipantRequest updateParticipantRequest)
         {
-            if (!sessions.TryGetValue(updateParticipantRequest.Session, out ISession session))
-                return;
-
             using var scope = serviceProvider.CreateScope();
             var userInfo = scope.ServiceProvider.GetRequiredService<IUserInfoService>();
 
-            var player = dataStore2.GetPlayerState(userInfo.Identifier);
-            var moderator = updateParticipantRequest.IsModerator ?? player.IsModerator;
+            if (!sessions.TryGetValue(updateParticipantRequest.Session, out ISessionEvents session))
+            {
+                logger.LogError($"Player {userInfo.Identifier} attempted operation on non-existent session.");
+                return;
+            }
 
-            dataStore2.SetIsModerator(userInfo.Identifier, moderator);
+            var player = await dataStore.GetPlayerContextAsync(updateParticipantRequest.Session, userInfo.Identifier);
+            player.Moderating = updateParticipantRequest.IsModerator ?? player.Moderating;
+            player.Profile.AvatarId = updateParticipantRequest.AvatarId ?? player.Profile.AvatarId;
 
+            if (!string.IsNullOrEmpty(updateParticipantRequest.DisplayName))
+            {
+                if (updateParticipantRequest.DisplayName.Equals("usemymicrosoftname"))
+                {
+                    // clear *both* display names to force reversion in-app
+                    player.DisplayName = userInfo.Name;
+                    player.Profile.DisplayName = null;
+                }
+                else
+                {
+                    player.Profile.DisplayName = updateParticipantRequest.DisplayName;
+                }
+            }
+
+            await dataStore.UpsertProfileAsync(player.Profile);
             await session.RaisePlayerUpdatedAsync(new PlayerUpdatedResponse()
             {
                 Id = userInfo.Identifier,
-                IsModerator = moderator
+                IsModerator = player.Moderating,
+                AvatarId = player.Profile.AvatarId,
+                DisplayName = player.DisplayName,
             });
         }
 
         /// <inheritdoc/>
         public async Task UpdateVoteAsync(UpdateVoteRequest updateVoteRequest)
         {
-            logger.LogDebug($"Enter {nameof(UpdateVoteAsync)}");
-            if (!sessions.TryGetValue(updateVoteRequest.Session, out ISession session))
+            if (!sessions.TryGetValue(updateVoteRequest.Session, out ISessionEvents session))
                 return;
 
             using var scope = serviceProvider.CreateScope();
             var userInfo = scope.ServiceProvider.GetRequiredService<IUserInfoService>();
 
-            var player = dataStore2.GetPlayerState(userInfo.Identifier);
-            var gamePhase = dataStore2.GetGamePhase(updateVoteRequest.Session);
+            var gamePhase = await dataStore.GetGamePhaseAsync(updateVoteRequest.Session);
             if (gamePhase != GamePhase.Voting)
             {
-                logger.LogError($"Player '{userInfo.Identifier}' attempted to vote during a non-voting phase of play.");
+                logger.LogError($"Player {userInfo.Identifier} attempted to vote during a non-voting phase of play.");
                 return;
             }
 
-            logger.LogDebug($"In vote is {updateVoteRequest.Vote}.");
             if (!int.TryParse(updateVoteRequest.Vote, out int outVote) && !(
                 outVote < (int)ModifiedFibonacciVote.Zero ||
                 outVote > (int)ModifiedFibonacciVote.Unknown))
             {
-                logger.LogError($"Player '{userInfo.Identifier}' sent an illegal vote.");
+                logger.LogError($"Player {userInfo.Identifier} sent an illegal vote.");
                 return;
             }
 
-            logger.LogDebug($"Outvote is {outVote}.");
-            dataStore2.SetVote(userInfo.Identifier, outVote);
+            await dataStore.SetVoteAsync(updateVoteRequest.Session, userInfo.Identifier, outVote);
 
             await session.RaiseVoteUpdatedAsync(new VoteUpdatedResponse() { Id = userInfo.Identifier });
-
-            logger.LogDebug($"Exit {nameof(UpdateVoteAsync)}");
         }
     }
 }

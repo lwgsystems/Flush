@@ -8,6 +8,7 @@ using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using Radzen;
 using ScrumPokerClub.Data;
+using ScrumPokerClub.Interop;
 using ScrumPokerClub.Services;
 using Snowflake.Core;
 using System;
@@ -51,13 +52,17 @@ namespace ScrumPokerClub
             services.AddServerSideBlazor()
                 .AddMicrosoftIdentityConsentHandler();
 
-            services.AddScoped<TooltipService>();
+            services
+                .AddScoped<TooltipService>()
+                .AddScoped<DialogService>();
 
             services
                 .AddHttpContextAccessor()
+                .AddScoped<IJSInterop, JSInterop>()
                 .AddScoped<IUserInfoService, UserInfoService>()
                 .AddSingleton<ISessionManagementService, SessionManagementService>()
-                .AddSingleton<IDataStore2, ApplicationInMemoryDataStore>()
+                .AddDbContext<SpcContext>(ServiceLifetime.Singleton)
+                .AddSingleton<IDatabase, EfCoreDatabase>()
                 .AddSingleton<ISnowflakeProvider>(s =>
                 {
                     return ActivatorUtilities.CreateInstance<SnowflakeProvider>(s, 1u, 1u);

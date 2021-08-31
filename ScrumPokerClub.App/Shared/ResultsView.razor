@@ -1,11 +1,8 @@
 ﻿@inject ISessionManagementService sessionManagementService
-@using ScrumPokerClub.Services.Responses
-@using ScrumPokerClub.Extensions
-@using ScrumPokerClub.Data 
 
 <div class="row mb-4 justify-content-center">
-    <RadzenChart @ref="chart">
-        <RadzenDonutSeries Data="@votes" CategoryProperty="Size" ValueProperty="Count">
+    <RadzenChart>
+        <RadzenDonutSeries Data="@Votes" CategoryProperty="Size" ValueProperty="Count">
         </RadzenDonutSeries>
     </RadzenChart>
 </div>
@@ -13,7 +10,7 @@
     <div class="col card-group">
         <div class="card">
             <div class="card-body">
-                <h1 class="card-text text-center text-muted display-4" id="min-card">@min</h1>
+                <h1 class="card-text text-center text-muted display-4" id="min-card">@Min</h1>
             </div>
             <div class="card-footer">
                 <h6 class="text-center text-muted">Min</h6>
@@ -21,7 +18,7 @@
         </div>
         <div class="card">
             <div class="card-body">
-                <h1 class="card-text text-center text-muted display-4" id="mode-card">@mode</h1>
+                <h1 class="card-text text-center text-muted display-4" id="mode-card">@Mode</h1>
             </div>
             <div class="card-footer">
                 <h6 class="text-center text-muted">Mode</h6>
@@ -29,7 +26,7 @@
         </div>
         <div class="card">
             <div class="card-body">
-                <h1 class="card-text text-center text-muted display-4" id="max-card">@max</h1>
+                <h1 class="card-text text-center text-muted display-4" id="max-card">@Max</h1>
             </div>
             <div class="card-footer">
                 <h6 class="text-center text-muted">Max</h6>
@@ -37,7 +34,7 @@
         </div>
         <div class="card">
             <div class="card-body">
-                <h1 class="card-text text-center text-muted display-4" id="votes-card">@totalVotes</h1>
+                <h1 class="card-text text-center text-muted display-4" id="votes-card">@TotalVotes</h1>
             </div>
             <div class="card-footer">
                 <h6 class="text-center text-muted">Vote(s)</h6>
@@ -45,48 +42,3 @@
         </div>
     </div>
 </div>
-
-@code {
-    [CascadingParameter]
-    public string Session { get; set; }
-
-    public string min { get; set; }
-    public string mode { get; set; }
-    public string max { get; set; }
-    public string totalVotes { get; set; }
-
-    RadzenChart chart;
-
-    class DataItem
-    {
-        public string Size { get; init; }
-        public int Count { get; init; }
-    }
-
-    IList<DataItem> votes { get; set; } = new List<DataItem>();
-
-    internal async Task OnTransitionToResults(object sender, TransitionToResultsResponse transitionToResultsResponse)
-    {
-        // todo this shouldn't be tied to a specific voting model
-        min = transitionToResultsResponse.Low.HasValue ? $"{((ModifiedFibonacciVote)transitionToResultsResponse.Low.Value).Description()}" : "?";
-        mode = transitionToResultsResponse.Mode.HasValue ? $"{((ModifiedFibonacciVote)transitionToResultsResponse.Mode.Value).Description()}" : "?";
-        max = transitionToResultsResponse.High.HasValue ? $"{((ModifiedFibonacciVote)transitionToResultsResponse.High.Value).Description()}" : "?";
-        totalVotes = $"{transitionToResultsResponse.Votes.Count()}";
-
-        votes.Clear();
-        var counts = transitionToResultsResponse.Votes
-            .GroupBy(kvp => kvp.Value);
-
-        foreach (var count in counts)
-        {
-            votes.Add(new DataItem()
-            {
-                Size = ((ModifiedFibonacciVote)count.Key).Description(),
-                Count = count.Count()
-            });
-        }
-
-        //await InvokeAsync(() => chart.Reload());
-        await InvokeAsync(() => StateHasChanged());
-    }
-}

@@ -1,7 +1,5 @@
 ﻿@inject ISessionManagementService sessionManagementService
 
-@using ScrumPokerClub.Services.Requests
-
 <div class="row mb-4">
     <div class="col text-center">
         @if (EnableVotingTools)
@@ -15,30 +13,3 @@
         }
     </div>
 </div>
-
-@code {
-    [CascadingParameter]
-    public string Session { get; set; }
-
-    [Parameter]
-    public bool EnableVotingTools { get; set; } = false;
-
-    [Parameter]
-    public bool EnableResultsTools { get; set; } = false;
-
-    void RevealVotes()
-    {
-        sessionManagementService.TransitionToResultsPhaseAsync(new TransitionToResultsPhaseRequest()
-        {
-            Session = Session
-        });
-    }
-
-    void PlayAgain()
-    {
-        sessionManagementService.TransitionToPlayPhaseAsync(new TransitionToPlayPhaseRequest()
-        {
-            Session = Session
-        });
-    }
-}

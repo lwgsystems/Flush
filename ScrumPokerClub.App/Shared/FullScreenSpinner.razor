@@ -1,18 +1,7 @@
-﻿<div class="loading-overlay d-flex justify-content-center align-items-center" style="@display">
+﻿<div class="loading-overlay bg-light d-flex justify-content-center align-items-center @display">
     <div>
         <p class="m-2 display-4 text-center">ScrumPokerClub</p>
-        <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+        <RadzenProgressBar Value="100" ShowValue="false" Mode="@pbarMode" />
         <p class="m-2 lead text-center">Please Wait</p>
     </div>
 </div>
-
-@code {
-    string display = "";
-
-    internal void Remove()
-    {
-        display = "display: none !important";
-        Task.Delay(1000)
-            .ContinueWith(t => InvokeAsync(() => StateHasChanged()));
-    }
-}

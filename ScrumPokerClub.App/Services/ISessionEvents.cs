@@ -7,7 +7,7 @@ namespace ScrumPokerClub.Services
     /// <summary>
     /// Interface for game session implementations.
     /// </summary>
-    interface ISession
+    interface ISessionEvents
     {
         /// <summary>
         /// Raised when a player connects, or reconnects.
@@ -44,20 +44,5 @@ namespace ScrumPokerClub.Services
         /// </summary>
         event EventHandler<PlayerUpdatedResponse> PlayerUpdated;
         Task RaisePlayerUpdatedAsync(PlayerUpdatedResponse playerUpdatedResponse);
-
-        /// <summary>
-        /// True if the session has no participants, else false.
-        /// </summary>
-        bool IsEmpty { get; }
-
-        /// <summary>
-        /// Increment the participant counter.
-        /// </summary>
-        void Increment();
-
-        /// <summary>
-        /// Decrement the participant counter.
-        /// </summary>
-        void Decrement();
     }
 }

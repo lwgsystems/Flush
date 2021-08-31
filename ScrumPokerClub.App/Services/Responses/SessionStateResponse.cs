@@ -16,6 +16,6 @@ namespace ScrumPokerClub.Services.Responses
         /// <summary>
         /// The states of all connected players.
         /// </summary>
-        public IEnumerable<PlayerState> Players { get; init; }
+        public IEnumerable<PlayerContext> Players { get; init; }
     }
 }

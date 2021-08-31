@@ -19,5 +19,10 @@
         /// The server assigned avatar id.
         /// </summary>
         public int AvatarId { get; init; }
+
+        /// <summary>
+        /// True if the player is a moderator.
+        /// </summary>
+        public bool IsModerator { get; init; }
     }
 }

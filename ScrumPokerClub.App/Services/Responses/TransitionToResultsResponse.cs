@@ -38,13 +38,13 @@ namespace ScrumPokerClub.Services.Responses
         /// </summary>
         /// <param name="playerStates">The input states.</param>
         /// <returns>The populated response.</returns>
-        public static TransitionToResultsResponse FromPlayerStates(IEnumerable<PlayerState> playerStates)
+        public static TransitionToResultsResponse FromPlayerStates(IEnumerable<PlayerContext> playerStates)
         {
             return new TransitionToResultsResponse()
             {
                 Votes = playerStates
-                    .Where(ps => ps.Vote.HasValue)
-                    .Select(ps => new KeyValuePair<string, int>(ps.PlayerId, ps.Vote.Value))
+                    .Where(ps => ps.LastVote.HasValue)
+                    .Select(ps => new KeyValuePair<string, int>(ps.Profile.Id, ps.LastVote.Value))
             };
         }
     }

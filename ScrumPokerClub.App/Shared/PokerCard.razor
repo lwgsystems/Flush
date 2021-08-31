@@ -1,22 +1,7 @@
-﻿@using ScrumPokerClub.Extensions
+﻿@using ScrumPokerClub.Extensions 
 
 <div class="col-sm-3 p-1">
     <label class="btn btn-outline-secondary vote py-5 w-100 @activeClass" @onclick="@(async e => await OnClickCallback.InvokeAsync(this))">
         <input type="radio" name="@Value" style="display:none;" />@(((Enum)Value).Description())
     </label>
 </div>
-
-@code {
-    [Parameter]
-    public object Value { get; set; }
-
-    [Parameter]
-    public EventCallback<PokerCard> OnClickCallback { get; set; }
-
-    string activeClass = "";
-
-    internal void SetIsTop(bool isTop)
-    {
-        activeClass = isTop ? "active" : string.Empty;
-    }
-}

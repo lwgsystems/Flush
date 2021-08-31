@@ -1,29 +1,8 @@
 ﻿@inject IJSRuntime JS
-
-<!-- Based on https://github.com/vinorodrigues/bootstrap-dark -->
+@inject ScrumPokerClub.Interop.IJSInterop JSInterop
 
 <div class="d-flex align-items-center justify-content-end h-100">
     <i class="fas fa-sun mr-2 text-warning"></i>
-    <div class="custom-control custom-switch" title="" data-toggle="tooltip" data-placement="left" data-original-title="Toggle Dark Mode<small><br>or press [D] hot-key</small>">
-        <input type="checkbox" class="custom-control-input" id="css-toggle-btn" @onclick="OnClickedToggle">
-        <label class="custom-control-label" for="css-toggle-btn"></label>
-    </div>
+    <RadzenSwitch @bind-Value=@IsDarkMode Change=@(args => OnToggle()) />
     <i class="fas fa-moon ml-2"></i>
 </div>
-
-@code {
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        await base.OnAfterRenderAsync(firstRender);
-        if (firstRender)
-        {
-            await JS.InvokeVoidAsync("loadScript", "js/darkmode.js");
-            await JS.InvokeVoidAsync("window.updateDarkToggleButton");
-        }
-    }
-
-    void OnClickedToggle()
-    {
-        JS.InvokeVoidAsync("window.darkModeToggleClicked");
-    }
-}

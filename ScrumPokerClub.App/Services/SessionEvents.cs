@@ -7,7 +7,7 @@ namespace ScrumPokerClub.Services
     /// <summary>
     /// A generic play session.
     /// </summary>
-    class Session : ISession
+    class SessionEvents : ISessionEvents
     {
         /// <summary>
         /// The number of participants currently active.

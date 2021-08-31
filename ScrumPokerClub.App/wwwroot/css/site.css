@@ -165,13 +165,24 @@ main {
     }
 
 .loading-overlay {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     height: 100vh;
     width: 100vw;
-    z-index: 100;
-    background: rgba(255,255,255, 1);
+    z-index: 100000;
+
+    opacity: 1;
+    background-color: rgba(92, 91, 87, 0.9);
+    -webkit-transition: opacity 600ms, visibility 600ms;
+    transition: opacity 600ms, visibility 600ms;
+}
+
+
+.transition {
+    opacity: 0;
+    visibility: hidden;
+    overflow: hidden;
 }
 
 .vote {
@@ -215,6 +226,7 @@ main {
         line-height: 1.5rem;
         text-align: center;
         color: white;
+        border: 0px !important;
     }
 
     .player-icon:before {
@@ -393,4 +405,8 @@ main {
     background-size: cover;
     margin-top: -1rem;
     color: #e1e1e1;
+}
+
+.selected-avatar {
+    border: .5rem solid #0F0 !important;
 }

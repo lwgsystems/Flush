@@ -15,6 +15,6 @@ namespace ScrumPokerClub.Services.Requests
         /// <summary>
         /// The configuration steps.
         /// </summary>
-        public Action<ISession> Configure { get; init; }
+        public Action<ISessionEvents> Configure { get; init; }
     }
 }

@@ -16,8 +16,13 @@
         public bool? IsModerator { get; init; }
 
         /// <summary>
-        /// True if the player is requesting observer status, else false. Null if unchanged.
+        /// A non-zero value if the avatar is changed. Null if unchanged.
         /// </summary>
-        public bool? IsObserver { get; init; }
+        public int? AvatarId { get; init; }
+
+        /// <summary>
+        /// The display name, if changed. Will update profile in database.
+        /// </summary>
+        public string DisplayName { get; init; }
     }
 }

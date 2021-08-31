@@ -9,6 +9,11 @@
     public enum GamePhase
     {
         /// <summary>
+        /// The game state is unknown.
+        /// </summary>
+        Unknown,
+
+        /// <summary>
         /// The <see cref="Game"/> has been created.
         /// This is only ever set once. All games subsequently transition from
         /// 'finished' to 'voting.'

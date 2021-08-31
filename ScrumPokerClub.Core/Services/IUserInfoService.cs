@@ -3,7 +3,7 @@
     /// <summary>
     /// Contract defining expected characteristics of an authenticated user.
     /// </summary>
-    interface IUserInfoService
+    public interface IUserInfoService
     {
         /// <summary>
         /// The friendly name of the user.
