@@ -145,12 +145,13 @@ main {
     min-height: 100%;
 }
 
-.footer {
+.app-footer {
     position: absolute;
     bottom: 0;
     width: 100%;
     white-space: nowrap;
     line-height: 4rem; /* Vertically center the text there */
+    padding: 1rem;
 }
 
 .btn-group-xl {
@@ -171,16 +172,6 @@ main {
     width: 100vw;
     z-index: 100;
     background: rgba(255,255,255, 1);
-}
-
-.spinner-load {
-    width: 4rem;
-    height: 4rem;
-    border-width: 0.8rem;
-}
-
-.spinner-name {
-    font-size: 3rem;
 }
 
 .vote {
@@ -379,4 +370,27 @@ main {
 
 #playareamain.moderator .moderator-only {
     display: inline-block;
+}
+
+/* dark mode toggle overrides */
+
+.custom-switch {
+    padding-left: 1.75rem !important;
+    line-height: initial !important;
+}
+
+    .custom-switch .custom-control-label::before {
+        left: -1.75rem !important;
+        width: 1.75rem !important;
+    }
+    .custom-switch .custom-control-label::after {
+        left: calc(-1.75rem + 2px) !important;
+    }
+
+.hero {
+    background: linear-gradient( rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2) ),url('/img/hero.jpg') no-repeat center;
+    height: 500px;
+    background-size: cover;
+    margin-top: -1rem;
+    color: #e1e1e1;
 }

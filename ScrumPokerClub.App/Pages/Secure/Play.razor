@@ -26,6 +26,8 @@
     </div>
 </CascadingValue>
 
+<FullScreenSpinner @ref="spinner"/>
+
 @code
 {
     [Parameter]
@@ -36,6 +38,7 @@
     TabPage playTab;
     TabPage resultsTab;
     ResultsView resultsView;
+    FullScreenSpinner spinner;
 
     bool ModeratorToolBoxMasterEnable = false;
 
@@ -84,6 +87,9 @@
             default:
                 break;
         }
+
+        // todo remove the loader overlay
+        spinner.Remove();
     }
 
     async void OnTransitionToResults(object sender, TransitionToResultsResponse transitionToResultsResponse)
