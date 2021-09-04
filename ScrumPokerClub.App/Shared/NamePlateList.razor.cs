@@ -2,7 +2,7 @@
 using Radzen;
 using ScrumPokerClub.Data;
 using ScrumPokerClub.Extensions;
-using ScrumPokerClub.Pages.Secure;
+using ScrumPokerClub.Pages.App;
 using ScrumPokerClub.Services.Responses;
 using System.Collections.Generic;
 using System.Linq;
@@ -116,7 +116,7 @@ namespace ScrumPokerClub.Shared
             if (namePlate.Id != UserInfoService.Identifier)
                 return;
 
-            await DialogService.OpenAsync<EditProfile>($"Editing {UserInfoService.Name}'s Profile",
+            await DialogService.OpenAsync<SettingsDialog>($"Editing {UserInfoService.Name}'s Profile",
                 new Dictionary<string, object>()
                 {
                     { "Session", Session },

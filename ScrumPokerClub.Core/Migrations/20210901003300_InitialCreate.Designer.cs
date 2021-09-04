@@ -7,7 +7,7 @@ using ScrumPokerClub.Data;
 
 namespace ScrumPokerClub.Migrations
 {
-    [DbContext(typeof(SpcContext))]
+    [DbContext(typeof(SpcDbContext))]
     [Migration("20210901003300_InitialCreate")]
     partial class InitialCreate
     {

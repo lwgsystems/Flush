@@ -2,6 +2,7 @@
 
 @inject ISessionManagementService SessionManagementService
 @inject IUserInfoService UserInfoService
+@inject DialogService DialogService
 
 <CascadingValue Value="Session">
     <div class="row" id="playareamain">
@@ -13,7 +14,7 @@
                     <ModeratorToolbox EnableVotingTools="@ModeratorToolBoxMasterEnable" />
                 </TabPage>
                 <TabPage Title="Results" @ref="resultsTab">
-                    <ResultsView @ref="resultsView"/>
+                    <ResultsView @ref="resultsView" />
                     <ModeratorToolbox EnableResultsTools="@ModeratorToolBoxMasterEnable" />
                 </TabPage>
             </TabControl>
@@ -21,4 +22,4 @@
     </div>
 </CascadingValue>
 
-<FullScreenSpinner @ref="spinner"/>
+<FullScreenSpinner @ref="spinner" />

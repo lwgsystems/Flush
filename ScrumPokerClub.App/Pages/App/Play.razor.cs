@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Radzen;
 using ScrumPokerClub.Data;
 using ScrumPokerClub.Services.Requests;
 using ScrumPokerClub.Services.Responses;
 using ScrumPokerClub.Shared;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace ScrumPokerClub.Pages.Secure
+namespace ScrumPokerClub.Pages.App
 {
     public partial class Play : ComponentBase, IDisposable
     {
@@ -99,6 +101,19 @@ namespace ScrumPokerClub.Pages.Secure
 
         async void OnPlayerDisconnected(object sender, PlayerDisconnectedResponse playerDisconnectedResponse)
         {
+            // todo account for weirdness
+            if (UserInfoService.Identifier == playerDisconnectedResponse.Id)
+            {
+                await DialogService.OpenAsync<ErrorDialog>($"ERROR",
+                    new Dictionary<string, object>()
+                    {
+                        { "Exception", new SpcSessionException("You were disconnected.") }
+                    }, new DialogOptions()
+                    {
+                        ShowClose = false
+                    });
+            }
+
             await namePlateList.OnPlayerDisconnected(sender, playerDisconnectedResponse);
         }
 

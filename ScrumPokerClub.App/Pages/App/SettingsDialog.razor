@@ -2,7 +2,6 @@
 @inject IDatabase DataStore
 @inject IUserInfoService UserInfoService
 
-@using System.IO;
 
 <div class="card mb-2">
     <h5 class="card-header">Global Options</h5>
@@ -37,7 +36,7 @@
                     <p>Your Avatar</p>
                 </div>
                 <div class="col-sm-12 d-flex flex-row justify-content-center flex-wrap">
-                    @for (var i = 1; i <= Directory.GetFiles($"{Directory.GetCurrentDirectory()}/wwwroot/img/avatar/SVG").Count(); ++i)
+                    @for (var i = 1; i <= NumAvatars; ++i)
                     {
                         int temp = i;
                         <div class="player-icon m-2 @IsSelectedAvatar(temp)"
@@ -57,7 +56,7 @@
                 <div class="col-sm-12 d-flex flex-row justify-content-center">
                     <div class="d-flex flex-column align-items-center justify-content-center mx-3">
                         <p>I'm moderating.</p>
-                        <RadzenSwitch @bind-Value=@value Style="margin-bottom: 20px" Change=@(args => OnModeratorChanged()) />
+                        <RadzenSwitch @bind-Value=@IsModerator Style="margin-bottom: 20px" Change=@(args => OnModeratorChanged()) />
                     </div>
                 </div>
             </div>

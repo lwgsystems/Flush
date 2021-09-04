@@ -4,10 +4,11 @@ using ScrumPokerClub.Services.Requests;
 using System;
 using System.Threading.Tasks;
 using System.Timers;
+using System.IO;
 
-namespace ScrumPokerClub.Pages.Secure
+namespace ScrumPokerClub.Pages.App
 {
-    public partial class EditProfile : ComponentBase, IDisposable
+    public partial class SettingsDialog : ComponentBase, IDisposable
     {
         [Parameter]
         public string Session { get; set; }
@@ -15,7 +16,10 @@ namespace ScrumPokerClub.Pages.Secure
         [Parameter]
         public string Id { get; set; }
 
-        bool value = false;
+        bool IsModerator { get; set; }
+
+        static int NumAvatars =>
+            Directory.GetFiles($"{Directory.GetCurrentDirectory()}/wwwroot/img/avatar/SVG").Length;
 
         PlayerContext playerContext;
 
@@ -23,7 +27,7 @@ namespace ScrumPokerClub.Pages.Secure
         {
             await Task.CompletedTask;
             playerContext = await DataStore.GetPlayerContextAsync(Session, Id);
-            value = playerContext.Moderating;
+            IsModerator = playerContext.Moderating;
             Data = playerContext.DisplayName;
 
             aTimer = new Timer(1000);
@@ -36,7 +40,7 @@ namespace ScrumPokerClub.Pages.Secure
             SessionManagementService.UpdateParticipantAsync(new UpdateParticipantRequest()
             {
                 Session = Session,
-                IsModerator = value
+                IsModerator = IsModerator
             });
         }
 

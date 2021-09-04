@@ -27,11 +27,11 @@ namespace ScrumPokerClub.Data
         /// <summary>
         /// 
         /// </summary>
-        private SpcContext Context { get; init; }
+        private SpcDbContext Context { get; init; }
 
         public EfCoreDatabase(
             ILogger<EfCoreDatabase> logger,
-            SpcContext context)
+            SpcDbContext context)
         {
             Logger = logger;
             Context = context;

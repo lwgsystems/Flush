@@ -10,7 +10,7 @@ namespace ScrumPokerClub.Extensions
         public static string Description(this Enum val)
         {
             var member = val.GetType().GetMember(val.ToString());
-            var attr = member.Single().GetCustomAttribute<DescriptionAttribute>();
+            var attr = member.SingleOrDefault().GetCustomAttribute<DescriptionAttribute>();
             return attr != null ? attr.Description : val.ToString();
         }
     }

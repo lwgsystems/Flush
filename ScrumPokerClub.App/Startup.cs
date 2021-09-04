@@ -61,7 +61,7 @@ namespace ScrumPokerClub
                 .AddScoped<IJSInterop, JSInterop>()
                 .AddScoped<IUserInfoService, UserInfoService>()
                 .AddSingleton<ISessionManagementService, SessionManagementService>()
-                .AddDbContext<SpcContext>(ServiceLifetime.Singleton)
+                .AddDbContext<SpcDbContext>(ServiceLifetime.Singleton)
                 .AddSingleton<IDatabase, EfCoreDatabase>()
                 .AddSingleton<ISnowflakeProvider>(s =>
                 {

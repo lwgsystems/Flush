@@ -8,7 +8,7 @@ namespace ScrumPokerClub.Data
     /// <summary>
     /// 
     /// </summary>
-    public class SpcContext : DbContext
+    public class SpcDbContext : DbContext
     {
         /// <summary>
         /// 
@@ -28,7 +28,7 @@ namespace ScrumPokerClub.Data
         /// <summary>
         /// 
         /// </summary>
-        public SpcContext()
+        public SpcDbContext()
         {
             var root = Environment.SpecialFolder.LocalApplicationData;
             var path = Environment.GetFolderPath(root);

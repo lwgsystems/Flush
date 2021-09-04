@@ -6,7 +6,7 @@ using ScrumPokerClub.Data;
 
 namespace ScrumPokerClub.Migrations
 {
-    [DbContext(typeof(SpcContext))]
+    [DbContext(typeof(SpcDbContext))]
     partial class SpcContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

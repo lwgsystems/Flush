@@ -8,12 +8,12 @@ namespace ScrumPokerClub.Extensions
     {
         public static TResult MinOrDefault<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> func)
         {
-            return enumerable.Any() ? enumerable.Min(func) : default(TResult);
+            return enumerable.Any() ? enumerable.Min(func) : default;
         }
 
         public static TResult MaxOrDefault<T, TResult>(this IEnumerable<T> enumerable, Func<T, TResult> func)
         {
-            return enumerable.Any() ? enumerable.Max(func) : default(TResult);
+            return enumerable.Any() ? enumerable.Max(func) : default;
         }
     }
 }
