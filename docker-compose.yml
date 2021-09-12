@@ -2,17 +2,16 @@ version: '3'
 services:
   spc:
     container_name: 'scrumpokerclub.app'
-    build: .
+    build:
+      context: .
+      dockerfile: ./ScrumPokerClub.App/Dockerfile
     ports:
-      - 80:5000
       - 443:5001
     volumes:
       # Mount the appsettings file instead of baking it into the image.
       - ./ScrumPokerClub.App/appsettings.json:/app/appsettings.json
-      # Mount the databases so that they persist on the host.
-      # The host side location can be anywhere.
-      - ./data/:/app/data-sources/
+      # Mount the local data directory.
+      - ./.appdata/:/root/.local/share/
       # Certs will be created if it doesn't exist, and may be left empty if not using HTTPS.
-      # See README.md, 'Enabling HTTPS'.
       - ./certs/:/app/tls/
     restart: always
