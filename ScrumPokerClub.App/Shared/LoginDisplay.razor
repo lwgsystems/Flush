@@ -1,0 +1,25 @@
+﻿@inject IUserInfoService userInfoService
+
+<form class="form-inline">
+    <AuthorizeView>
+        <Authorized>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">@userInfoService.Name (@userInfoService.Email)</div>
+                </div>
+                <div class="input-group-append">
+                    <a href="MicrosoftIdentity/Account/SignOut" class="btn btn-dark" role="button" aria-pressed="true">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <div class="input-group">
+                <a href="MicrosoftIdentity/Account/SignIn" class="btn btn-dark" role="button" aria-pressed="true">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+</form>

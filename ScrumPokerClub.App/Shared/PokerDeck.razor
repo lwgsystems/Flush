@@ -1,0 +1,8 @@
+﻿@inject ISessionManagementService sessionManagementService
+
+<div class="row justify-content-md-center btn-group-xl mb-4" role="group">
+    @for (var i = 0; i < Values.Length; ++i)
+    {
+        <PokerCard OnClickCallback="@OnPokerCardClicked" Value="@Values.GetValue(i)" />
+    }
+</div>

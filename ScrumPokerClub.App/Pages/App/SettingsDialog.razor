@@ -1,0 +1,65 @@
+﻿@inject ISessionManagementService SessionManagementService
+@inject IDatabase DataStore
+@inject IUserInfoService UserInfoService
+
+
+<div class="card mb-2">
+    <h5 class="card-header">Global Options</h5>
+    <div class="card-body">
+        <form>
+            <div class="form-row">
+                <div class="form-group col-sm-12">
+                    <label for="inputDisplayName" class="mb-1">Display Name</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="exampleFormControlInput1" aria-describedby="displayNameHelp" placeholder="Namey McNameface" @bind-value="@Data" @bind-value:event="oninput" @onkeyup="@(e => OnHandleKeyUp())">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-danger" type="button" @onclick="@(e => OnResetDisplayName())">Reset</button>
+                        </div>
+                    </div>
+                    <small id="displayNameHelp" class="form-text text-muted">We only save your <strong>custom</strong> name &mdash; never your actual name.</small>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-sm-6">
+                    <label for="inputEmailAddress" class="mb-1">Email address</label>
+                    <input type="text" class="form-control" id="inputEmailAddress" aria-describedby="emailHelp" readonly value="@UserInfoService.Email">
+                    <small id="emailHelp" class="form-text text-muted">We <strong>never</strong> save this.</small>
+                </div>
+                <div class="form-group col-sm-6">
+                    <label for="inputUniqueId" class="mb-1">Unique Identifier</label>
+                    <input type="text" class="form-control" id="inputUniqueId" aria-describedby="oidHelp" readonly value="@UserInfoService.Identifier">
+                    <small id="oidHelp" class="form-text text-muted">We <strong>save</strong> this to remember your preferences.</small>
+                </div>
+            </div>
+            <div class="form-row form-row border rounded p-2">
+                <div class="col-sm-12 text-center">
+                    <p>Your Avatar</p>
+                </div>
+                <div class="col-sm-12 d-flex flex-row justify-content-center flex-wrap">
+                    @for (var i = 1; i <= NumAvatars; ++i)
+                    {
+                        int temp = i;
+                        <div class="player-icon m-2 @IsSelectedAvatar(temp)"
+                             data-avatar="@temp"
+                             @onclick="@(args => OnAvatarChanged(temp))"></div>
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="card mb-2">
+    <h5 class="card-header">Session Options</h5>
+    <div class="card-body">
+        <form>
+            <div class="form-row">
+                <div class="col-sm-12 d-flex flex-row justify-content-center">
+                    <div class="d-flex flex-column align-items-center justify-content-center mx-3">
+                        <p>I'm moderating.</p>
+                        <RadzenSwitch @bind-Value=@IsModerator Style="margin-bottom: 20px" Change=@(args => OnModeratorChanged()) />
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

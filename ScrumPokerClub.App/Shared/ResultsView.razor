@@ -1,0 +1,44 @@
+﻿@inject ISessionManagementService sessionManagementService
+
+<div class="row mb-4 justify-content-center">
+    <RadzenChart>
+        <RadzenDonutSeries Data="@Votes" CategoryProperty="Size" ValueProperty="Count">
+        </RadzenDonutSeries>
+    </RadzenChart>
+</div>
+<div class="row mb-4">
+    <div class="col card-group">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-text text-center text-muted display-4" id="min-card">@Min</h1>
+            </div>
+            <div class="card-footer">
+                <h6 class="text-center text-muted">Min</h6>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-text text-center text-muted display-4" id="mode-card">@Mode</h1>
+            </div>
+            <div class="card-footer">
+                <h6 class="text-center text-muted">Mode</h6>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-text text-center text-muted display-4" id="max-card">@Max</h1>
+            </div>
+            <div class="card-footer">
+                <h6 class="text-center text-muted">Max</h6>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-text text-center text-muted display-4" id="votes-card">@TotalVotes</h1>
+            </div>
+            <div class="card-footer">
+                <h6 class="text-center text-muted">Vote(s)</h6>
+            </div>
+        </div>
+    </div>
+</div>

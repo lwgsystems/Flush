@@ -1,0 +1,15 @@
+﻿@inject ISessionManagementService sessionManagementService
+
+<div class="row mb-4">
+    <div class="col text-center">
+        @if (EnableVotingTools)
+        {
+            <button type="button" id="revealVote" class="btn btn-lg btn-outline-success moderator-only" @onclick="RevealVotes">Reveal!</button>
+        }
+
+        @if (EnableResultsTools)
+        {
+            <button type="button" id="revealVote" class="btn btn-lg btn-outline-success moderator-only" @onclick="PlayAgain">Play Again?</button>
+        }
+    </div>
+</div>

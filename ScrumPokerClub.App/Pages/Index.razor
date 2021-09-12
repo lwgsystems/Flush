@@ -1,0 +1,24 @@
+﻿@page "/"
+
+@inject ISnowflakeProvider snowflakeProvider
+
+<div class="row d-flex hero" style="">
+    <div class="col-md-6 p-5 align-self-center ">
+        <h1 style="text-shadow: 2px 2px #000;">Snappy call to action goes here.</h1>
+    </div>
+    <div class="col-md-6 p-5 align-self-center text-center">
+        <h3 style="text-shadow: 2px 2px #000;">Ready to play?</h3>
+        <a href="/@snowflakeProvider.GetNext()" class="btn btn-dark btn-lg" role="button" aria-pressed="true">Start a new Session</a>
+    </div>
+</div>
+<div class="row d-flex section">
+    <div class="col-md-12 p-3 text-center">
+        <h2>Planning. Without the Faff.</h2>
+    </div>
+    <div class="col-md-8 mx-auto p5 text-center">
+        <h5>Hello, I'm Leif. Agile methodologies are all the rage, and as engineers we're always looking for the easiest way to simplify our 'ceremonies.'</h5>
+        <p>Unfortunately, a lot of the tools we find are often subpar in one way or another. Perhaps the page constantly refreshes in response to another persons action. Maybe they're just really slow.'</p>
+        <p>I built ScrumPokerClub precisely because of issues like these. I wanted a planning poker tool that was fast, accessible and without any fuss. If you've landed here you're probably looking for the same thing, so I hope you enjoy using this tool.</p>
+        <p>If you don't enjoy using it, though, I invite you to reach out. Send me an <a href="mailto:hello@lwg.systems">email</a> with your thoughts, and we can bounce some ideas around. Alternatively, consider opening a pull request &mdash; ScrumPokerClub is <a href="https://github.com/lwgsystems/scrumpokerclub">open-source</a>!</p>
+    </div>
+</div>

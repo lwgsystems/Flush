@@ -1,0 +1,15 @@
+﻿@inject ISessionManagementService SessionManagementService
+@inject IUserInfoService UserInfoService
+@inject DialogService DialogService
+
+<div class="justify-content-sm-left col-sm-3" id="playerlist">
+    @foreach (var namePlate in namePlatesDto)
+    {
+        <NamePlate Id="@namePlate.Id"
+                   Name="@namePlate.Name"
+                   AvatarId="@namePlate.AvatarId"
+                   Vote="@namePlate.Vote"
+                   IsModerator="@namePlate.IsModerator"
+                   OnClickCallback="@OnNamePlateClicked"/>
+    }
+</div>

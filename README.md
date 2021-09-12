@@ -2,7 +2,7 @@
 
 ## What is this?
 
-Flush is a tool for facilitating and enhancing Agile planning activities; built with speed, ease of use and reliability in mind.
+ScrumPokerClub is a tool for facilitating and enhancing Agile planning activities; built with speed, ease of use and reliability in mind.
 
 ## Prerequisites
 
@@ -17,23 +17,13 @@ All of the following steps assume you have checked out the application and `PWD`
 
 Please issue `git submodule init && git submodule update` to ensure the latest versions of the submodules are present at build time.
 
-### Configure Application Security
+### Run ScrumPokerClub
 
-Flush uses the SQLCipher provider to enable cryptographically secured backing stores in EFCore.
-
-You will need to specify keys in the `FlushDb`, `IdentityDb` and `JwtAuthentication` sections of `appsettings.json`.
-
-You may use any alphanumeric value you wish for these keys however a script, `gen_keys.sh`, is provided to automatically generate and insert 2048-bit keys from the local random source.
-
-The keys you select are used in SQLCipher as the input to a SHA-3 512-bit key derivation function. This means that the actual encryption key used by the database will be different to your input key. The application, however, will still only require the input key to decrypt it.
-
-### Run Flush
-
-To build the container image and start Flush, run `docker-compose up` at the root of your checkout.
+To build the container image and start `scrumpokerclub.app`, run `docker-compose up` at the root of your checkout.
 
 ## Enabling HTTPS
 
-By default Flush assumes it is run behind a mature reverse proxy and, as a result, HTTPS is not enabled. To enable HTTPS, please add the following to the `Kestrel.EndPoints` section of `appsettings.json`.
+By default ScrumPokerClub assumes it is run behind a mature reverse proxy and, as a result, HTTPS is not enabled. To enable HTTPS, please add the following to the `Kestrel.EndPoints` section of `appsettings.json`.
 
 ```
 "HttpsInlineCertFile": {

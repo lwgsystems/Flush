@@ -1,0 +1,23 @@
+﻿@inject TooltipService tooltipService
+@inject IUserInfoService userInfoService
+
+<div class="mx-2 mt-2 mb-3 d-flex flex-row" id="@Id">
+    @if (userInfoService.Identifier == Id)
+    {
+        <div class="player-icon @NamePlateVoteClasses"
+             id="status-@Id"
+             data-vote="@Vote"
+             data-avatar="@AvatarId"
+             @ref="@avatar"
+             @onclick="@(async e => { CloseTooltip(); await OnClickCallback.InvokeAsync(this); })"></div>
+    }
+    else
+    {
+        <div class="player-icon @NamePlateVoteClasses"
+             id="status-@Id"
+             data-vote="@Vote"
+             data-avatar="@AvatarId"></div>
+    }
+    <div class="ml-3 player-name">@Name</div>
+</div>
+

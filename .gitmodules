@@ -1,0 +1,3 @@
+[submodule "Snowflake.Core"]
+	path = Snowflake.Core
+	url = git@github.com:lwgsystems/Snowflake.Core.git

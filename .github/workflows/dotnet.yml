@@ -1,4 +1,4 @@
-name: .NET
+name: Build and Test ScrumPokerClub
 
 on:
   push:
@@ -12,7 +12,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout repository and submodules
+      uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.MY_REPO_PAT }}
+        submodules: recursive
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
