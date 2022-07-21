@@ -1,4 +1,8 @@
-# ScrumPokerClub (formerly Flush) is now deprecated in favour of [ScrumKit](https://github.com/LeifWritesCode/ScrumKit), a more powerful application spanning more of the Agile lifecycle. The existing 'latest' build (e581ce737d1f7e0fccfcb9c9bd5632a8e746dc84) and 'edge' build (v1.0.0) may continue to be used at [spc.leif.uk](https://spc.leif.uk) and [edge.spc.leif.uk](https://edge.spc.leif.uk) respectively. This repository will not longer receive code updates, with the exception of security fixes.
+# Deprecation Notice
+
+ScrumPokerClub (formerly Flush) is now deprecated in favour of [ScrumKit](https://github.com/LeifWritesCode/ScrumKit), a more powerful application spanning more of the Agile lifecycle. The existing ['latest' build](https://github.com/lwgsystems/scrumpokerclub/commit/e581ce737d1f7e0fccfcb9c9bd5632a8e746dc84) and ['edge' build](https://github.com/lwgsystems/scrumpokerclub/commit/5e9133174661aa3da5c59e2f0df4df20dc122ba9) may continue to be used at [spc.leif.uk](https://spc.leif.uk) and [edge.spc.leif.uk](https://edge.spc.leif.uk) respectively. This repository will not longer receive code updates, with the exception of security fixes.
+
+===
 
 ![Flush][logo]
 
